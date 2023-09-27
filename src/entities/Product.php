@@ -11,7 +11,7 @@ class Product {
     #[ORM\Id,ORM\Column(type:"integer"),ORM\GeneratedValue(strategy:"IDENTITY")]
     private int $id;
 
-    #[ORM\Column(type:Types::STRING,length:150)]
+    #[ORM\Column(type:Types::STRING,length:150,unique:true)]
     private string $product_name;
 
     #[ORM\Column(type:Types::STRING,length:150)]
@@ -30,7 +30,7 @@ class Product {
     private $categories;
 
     #[ORM\OneToMany(targetEntity:Image::class,mappedBy:"product")]
-    private ArrayCollection $images;
+    private  $images;
 
     function __construct(){
         $this->categories = new ArrayCollection;    
@@ -39,7 +39,7 @@ class Product {
 
     function addImage(Image $image){
         $this->images->add($image);
-        $image->addProduct($this);
+        $image->setProduct($this);
     }
 
     function addCategory(Category $category){

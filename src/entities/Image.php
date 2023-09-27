@@ -1,11 +1,14 @@
 <?php
 
+use App\repositories\ImageRespository;
+use App\repositories\ImagesRepository;
 use Doctrine\ORM\Mapping\Entity;
 use Doctrine\ORM\Mapping as ORM;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping\Column;
 
-#[Entity()]
+#[Entity(repositoryClass:ImagesRepository::class)]
+#[ORM\Table(name:"images")]
 class Image {
     #[ORM\Id]
     #[ORM\Column(type: Types::INTEGER)]
@@ -31,7 +34,7 @@ class Image {
         return "image/".$this->extension;
     }
 
-    function addProduct(Product $product) {
+    function setProduct(Product $product) {
         $this->product = $product;
     }
 

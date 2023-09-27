@@ -1,22 +1,22 @@
 <?php return array(
     'root' => array(
-        'pretty_version' => '1.0.0+no-version-set',
-        'version' => '1.0.0.0',
+        'pretty_version' => 'dev-main',
+        'version' => 'dev-main',
         'type' => 'library',
         'install_path' => __DIR__ . '/../../',
         'aliases' => array(),
-        'reference' => NULL,
+        'reference' => '13ac6b9e222343ec58e5525a24aec5813b46b51f',
         'name' => '__root__',
         'dev' => true,
     ),
     'versions' => array(
         '__root__' => array(
-            'pretty_version' => '1.0.0+no-version-set',
-            'version' => '1.0.0.0',
+            'pretty_version' => 'dev-main',
+            'version' => 'dev-main',
             'type' => 'library',
             'install_path' => __DIR__ . '/../../',
             'aliases' => array(),
-            'reference' => NULL,
+            'reference' => '13ac6b9e222343ec58e5525a24aec5813b46b51f',
             'dev_requirement' => false,
         ),
         'doctrine/cache' => array(
@@ -145,6 +145,15 @@
             'reference' => '25a06c7bf4c6b8218f47928654252863ffc890a5',
             'dev_requirement' => false,
         ),
+        'firebase/php-jwt' => array(
+            'pretty_version' => 'v6.8.1',
+            'version' => '6.8.1.0',
+            'type' => 'library',
+            'install_path' => __DIR__ . '/../firebase/php-jwt',
+            'aliases' => array(),
+            'reference' => '5dbc8959427416b8ee09a100d7a8588c00fb2e26',
+            'dev_requirement' => false,
+        ),
         'guzzlehttp/psr7' => array(
             'pretty_version' => '2.6.1',
             'version' => '2.6.1.0',
@@ -152,6 +161,15 @@
             'install_path' => __DIR__ . '/../guzzlehttp/psr7',
             'aliases' => array(),
             'reference' => 'be45764272e8873c72dbe3d2edcfdfcc3bc9f727',
+            'dev_requirement' => false,
+        ),
+        'ircmaxell/password-compat' => array(
+            'pretty_version' => 'v1.0.4',
+            'version' => '1.0.4.0',
+            'type' => 'library',
+            'install_path' => __DIR__ . '/../ircmaxell/password-compat',
+            'aliases' => array(),
+            'reference' => '5c5cde8822a69545767f7c7f3058cb15ff84614c',
             'dev_requirement' => false,
         ),
         'laravel/serializable-closure' => array(
@@ -863,7 +881,7 @@
             'aliases' => array(
                 0 => '9999999-dev',
             ),
-            'reference' => '42219959a092ab7b32b566a9996b46dde061d8af',
+            'reference' => 'f45a6a589c8539ff5974c45e0969142d783fe69d',
             'dev_requirement' => false,
         ),
     ),

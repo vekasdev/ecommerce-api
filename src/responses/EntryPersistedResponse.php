@@ -18,10 +18,10 @@ class EntryPersistedResponse extends AbstractResponseEntry {
      * @param EntryPersisted $data 
     */
     function __invoke($data) : ResponseInterface{
-        if($data->successed){
-            $response =  $this->responseFactory->createResponse(200);
-        }else {
-            $response =  $this->responseFactory->createResponse(200);
+        if($data->successed ==true){
+            $response = $data->responseInterface->withStatus(200);
+        }else if($data->successed ==false) {
+            $response = $data->responseInterface->withStatus(400);
         }
         $response = $response->withHeader("Content-Type","application/json");
         $response->getBody()->write(json_encode($data->data));

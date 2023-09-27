@@ -1,9 +1,12 @@
 <?php
 
 use App\interfaces\RequestValidatorInterface;
+use App\model\AuthinticationService;
 use App\model\ImagesService;
 use App\model\ValidatorFactory;
+use App\repositories\UsersRepository;
 use Doctrine\ORM\EntityManager;
+use Firebase\JWT\JWT;
 use GuzzleHttp\Psr7\Request;
 use Psr\Container\ContainerInterface;
 use Tuupola\Http\Factory\ResponseFactory;
@@ -27,5 +30,10 @@ return [
         $container->get("env")["imageUploadConfig"]["storageDirectory"],
         $container->get("env")["imageUploadConfig"]["acceptedExtensions"],
         $container->get("env")["imageUploadConfig"]["maxSize"]
+    ),
+    JWT::class => new JWT(),
+    AuthinticationService::class => fn(ContainerInterface $container) => new AuthinticationService(
+        $container->get(JWT::class),
+        $container->get(EntityManager::class)
     )
 ];
