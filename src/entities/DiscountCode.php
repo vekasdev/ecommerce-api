@@ -2,17 +2,18 @@
 
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\ORM\Mapping as ORM;
+use App\repositories\DiscountCodeRepository;
 use Doctrine\DBAL\Types\Types;
 
-#[ORM\Entity()]
+#[ORM\Entity(repositoryClass:DiscountCodeRepository::class)]
 class DiscountCode {
     #[ORM\Id]
     #[ORM\Column(type: Types::INTEGER)]
     #[ORM\GeneratedValue]
     private $id;
 
-    #[ORM\Column(type:Types::DECIMAL,precision:11,scale:2)]
-    private float $amount;
+    #[ORM\Column(type:Types::DECIMAL,precision:2, scale:2)]
+    private float $precentage;
 
     #[ORM\Column(type:Types::STRING)]
     private string $code;
@@ -29,10 +30,7 @@ class DiscountCode {
 
     function addOrderGroup(OrderGroup $orderGroup){
         $this->orderGroups->add($orderGroup);
-        $orderGroup->setDiscountCode($this);
     }
-
-
 
     /**
      * Get the value of code
@@ -55,17 +53,17 @@ class DiscountCode {
     /**
      * Get the value of amount
      */
-    public function getAmount(): float
+    public function getPrecentage(): float
     {
-        return $this->amount;
+        return $this->precentage;
     }
 
     /**
      * Set the value of amount
      */
-    public function setAmount(float $amount): self
+    public function setAmount(float $precentage): self
     {
-        $this->amount = $amount;
+        $this->precentage = $precentage;
 
         return $this;
     }

@@ -1,9 +1,10 @@
 <?php
+use App\repositories\DeliveryRegionRepository;
 use Doctrine\ORM\Mapping as ORM;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping\Entity;
 
-#[Entity()]
+#[Entity(repositoryClass:DeliveryRegionRepository::class)]
 class DeliveryRegion {
     #[ORM\Id]
     #[ORM\Column(type: Types::INTEGER)]

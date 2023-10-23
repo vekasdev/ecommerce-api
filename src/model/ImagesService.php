@@ -5,7 +5,7 @@ namespace App\model;
 
 use App\dtos\UploadedImage;
 use App\exceptions\UploadedFileException;
-use GuzzleHttp\Psr7\UploadedFile;
+use Slim\Psr7\UploadedFile;
 
 class ImagesService {
     public function __construct(

@@ -6,7 +6,10 @@ namespace App\controllers;
 use App\dtos\ResponseDataTransfer;
 use App\dtos\UserData;
 use App\dtos\UserFiltering;
+use App\exceptions\EntityNotExistException;
+use App\exceptions\UserValidationException;
 use App\model\AuthinticationService;
+use App\model\UserServiceFactory;
 use App\repositories\UsersRepository;
 use Doctrine\DBAL\Exception\UniqueConstraintViolationException;
 use Doctrine\ORM\EntityManager;
@@ -22,7 +25,8 @@ class UsersController {
     function __construct(
         private EntityManager $entityManager,
         private AuthinticationService $authService,
-        private ResponseManager $responseManager
+        private ResponseManager $responseManager,
+        private UserServiceFactory $userServiceFactory
     ){
         $this->usersRepository = $entityManager->getRepository(User::class);
     }
@@ -39,12 +43,13 @@ class UsersController {
         );
         try {
             $user = $this->usersRepository->addUser($userData);
-            $token = $this->authService->createSession($user);
-            
+            $userService = $this->userServiceFactory->make($user);
+            $userService->generateCode();
             $resData = new ResponseDataTransfer(
-                $res,200,[
-                    "message" => "user created successfully",
-                    "token" => $token
+                $res,201,[
+                    "status"=>"created",
+                    "message"=>"Resource has been created but is not yet validated. Further validation is required.",
+                    "id" => $user->getId(),
                 ]
             );
         } catch (UniqueConstraintViolationException $e) {
@@ -59,6 +64,30 @@ class UsersController {
         return $this->responseManager->getResponse(JsonResponse::class,$resData); 
     }
 
+    function reGenerateValidationCode(ServerRequest $req, Response $res) {
+        // user-id 
+        $data = $req->getQueryParams();
+
+        try {
+            $user = $this->usersRepository->find((int) $data["user-id"]);
+            $service = $this->userServiceFactory->make($user);
+            $service->generateCode();
+            $dataReturn = new ResponseDataTransfer($res,200,[
+                "message" => "code sent successfully"
+            ]);
+        } catch(EntityNotExistException $e){
+            $dataReturn = new ResponseDataTransfer($res,400,[
+                "message" => $e->getMessage()
+            ]);
+        } catch(UserValidationException $e) {
+            $dataReturn = new ResponseDataTransfer($res,400,[
+                "message" => $e->getMessage()
+            ]);
+        }
+
+        return $this->responseManager->getResponse(JsonResponse::class,$dataReturn);
+    }
+    
     function logIn(ServerRequest $req, Response $res) {
         // email, password
         $data = $req->getParams();
@@ -90,5 +119,35 @@ class UsersController {
             }
         }
         return $this->responseManager->getResponse(JsonResponse::class,$resData); 
+    }
+
+    function validateUserByOTP(ServerRequest $req, Response $res,$args) {
+        $userId = $args["user-id"];
+        $validationCode = $args["validation-code"];
+
+        try {
+            $user= $this->usersRepository->find((int)$userId);
+            $userService = $this->userServiceFactory->make($user);
+            $userService->validate($validationCode);
+            $resData = new ResponseDataTransfer(
+                $res,200,[
+                    "message" =>  "user validated successfully",
+                ]
+            );  
+        }catch (EntityNotExistException $e) {
+            $resData = new ResponseDataTransfer(
+                $res,400,[
+                    "message" =>  $e->getMessage(),
+                ]
+            );  
+        }catch(UserValidationException $e){
+            $resData = new ResponseDataTransfer(
+                $res,400,[
+                    "message" =>  $e->getMessage(),
+                ]
+            );  
+        }
+
+        return $this->responseManager->getResponse(JsonResponse::class,$resData);
     }
 }

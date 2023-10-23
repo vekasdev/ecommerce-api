@@ -8,6 +8,8 @@ use App\dtos\UserFiltering;
 use Doctrine\ORM\EntityRepository;
 use Doctrine\ORM\NoResultException;
 use User;
+use ValidationCode;
+
 class UsersRepository extends EntityRepository {
     function addUser(UserData $userData){
         $user = new User();
@@ -16,8 +18,9 @@ class UsersRepository extends EntityRepository {
         ->setFamilyName($userData->familyName)
         ->setFirstName($userData->firstName)
         ->setPassword($userData->password)
-        ->setPhoneNumber($userData->phoneNumber);
-        
+        ->setPhoneNumber($userData->phoneNumber)
+        ->setValid(false);
+
         $this->getEntityManager()->persist($user);
         $this->getEntityManager()->flush();
         return $user;

@@ -6,7 +6,7 @@ use Product;
 use \Order;
 
 class OrdersRepository extends EntityRepository {
-    function addOrder(Product $product , int $quantity){
+    function createOrder(Product $product , int $quantity){
         $order = new Order();
         $order->setProduct($product);
         $order->setQuantity($quantity);

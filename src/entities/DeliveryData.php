@@ -1,33 +1,74 @@
 <?php
 
+use App\repositories\DeliveryDataRepository;
 use Doctrine\ORM\Mapping\Entity;
 use Doctrine\ORM\Mapping as ORM;
 use Doctrine\DBAL\Types\Types;
 
-#[Entity()]
+#[Entity(repositoryClass:DeliveryDataRepository::class)]
 class DeliveryData {
 
     #[ORM\Id]
     #[ORM\Column(type: Types::INTEGER)]
     #[ORM\GeneratedValue]
     private $id;
-    #[ORM\Column(type:types::STRING)]
-    private string $location;
-    #[ORM\Column(type:types::STRING)]
+    #[ORM\Column(type:types::STRING,nullable:true)]
+    private string | null $location;
+    #[ORM\Column(type:types::STRING,nullable:true)]
     private string $mapsLocation;
-    #[ORM\Column(type:types::STRING)]
-    private string $city;
-    #[ORM\Column(type:types::STRING)]
+
+    #[ORM\Column(type:types::STRING,nullable:true)]
     private string $phoneNumber;
 
-    #[ORM\ManyToOne(targetEntity:DeliveryRegion::class,inversedBy:"deliveryData",cascade:["persist","remove"])]
+    #[ORM\Column(type:Types::STRING,nullable:true)]
+    private string $postalCode;
+
+    // drive region specifies the available spaces and each-one costs
+
+    #[ORM\ManyToOne(targetEntity:DeliveryRegion::class,inversedBy:"deliveryData")]
+    #[ORM\JoinColumn(name:"deliveryRegionId",referencedColumnName:"id",nullable:true)]
     private $deliveryRegion;
 
-    #[ORM\OneToOne(targetEntity:OrderGroup::class,inversedBy:"deliveryData")]
+    #[ORM\ManyToOne(targetEntity:OrderGroup::class,inversedBy:"deliveryData",cascade:["persist"])]
     private $orderGroup;
 
+    #[ORM\ManyToOne(targetEntity:User::class,cascade:["persist","remove"],inversedBy:"deliveryData")]
+    private $user;
+
+    #[ORM\Column(type:types::BOOLEAN)]
+    private bool $defaultData = false;
+
+    #[ORM\Column(type:types::STRING,nullable:true)]
+    private string | null $name;
+
+
+    #[ORM\Column(type: Types::BOOLEAN,nullable:true)]
+    private bool $delivery = true;
+    
+
+    function setUser(User $user) {
+        $this->user = $user;
+        return $this;
+    }
+
+    function getName() : null | string {
+        return $this->name;
+    }
+
+    function setName(string $name) {
+        $this->name = $name;
+    }
+    function getUser() : User{
+        return $this->user;
+    }
+
     function getDeliveryCost() {
-        return $this->deliveryRegion->getDeliveryCost();
+        $cost = 0 ;
+        if($this->delivery) {
+            $cost = $this->deliveryRegion->getDeliveryCost();
+        }
+
+        return $cost ;
     }
 
     function setDeliveryRegion(DeliveryRegion $deliveryRegion){
@@ -35,7 +76,7 @@ class DeliveryData {
     }
 
     function getDeliveryRegion(){
-        return $this->deliveryRegion;
+        return $this->deliveryRegion or null;
     }
 
     /**
@@ -59,7 +100,7 @@ class DeliveryData {
     /**
      * Get the value of location
      */
-    public function getLocation(): string
+    public function getLocation(): string | null
     {
         return $this->location;
     }
@@ -88,24 +129,6 @@ class DeliveryData {
     public function setMapsLocation(string $mapsLocation): self
     {
         $this->mapsLocation = $mapsLocation;
-
-        return $this;
-    }
-
-    /**
-     * Get the value of city
-     */
-    public function getCity(): string
-    {
-        return $this->city;
-    }
-
-    /**
-     * Set the value of city
-     */
-    public function setCity(string $city): self
-    {
-        $this->city = $city;
 
         return $this;
     }
@@ -142,6 +165,62 @@ class DeliveryData {
     public function setOrderGroup($orderGroup): self
     {
         $this->orderGroup = $orderGroup;
+
+        return $this;
+    }
+
+
+
+    /**
+     * Get the value of postalCode
+     */
+    public function getPostalCode(): string
+    {
+        return $this->postalCode;
+    }
+
+    /**
+     * Set the value of postalCode
+     */
+    public function setPostalCode(string $postalCode): self
+    {
+        $this->postalCode = $postalCode;
+
+        return $this;
+    }
+
+    /**
+     * Get the value of defaultData
+     */
+    public function isDefaultData(): bool
+    {
+        return $this->defaultData;
+    }
+
+    /**
+     * Set the value of defaultData
+     */
+    public function setDefaultData(bool $defaultData): self
+    {
+        $this->defaultData = $defaultData;
+
+        return $this;
+    }
+
+    /**
+     * Get the value of delivery
+     */
+    public function isDelivery(): bool
+    {
+        return $this->delivery;
+    }
+
+    /**
+     * Set the value of delivery
+     */
+    public function setDelivery(bool $delivery): self
+    {
+        $this->delivery = $delivery;
 
         return $this;
     }

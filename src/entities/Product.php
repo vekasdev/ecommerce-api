@@ -29,12 +29,28 @@ class Product {
     #[ORM\ManyToMany(targetEntity:Category::class,inversedBy:"products",cascade:["persist","remove"])]
     private $categories;
 
-    #[ORM\OneToMany(targetEntity:Image::class,mappedBy:"product")]
+    #[ORM\OneToMany(targetEntity:Image::class,mappedBy:"product",cascade:["remove","persist"])]
     private  $images;
+
+    #[ORM\ManyToMany(targetEntity:Color::class,mappedBy:"products")]
+    private $colors;
+
+
+    #[ORM\Column(type:Types::DECIMAL,precision:2,scale:1)]
+    private float $discountPrecentage = 1.0;
+
+    #[ORM\Column(type:Types::INTEGER)]
+    private $likes = 0;
 
     function __construct(){
         $this->categories = new ArrayCollection;    
         $this->images = new ArrayCollection;   
+        $this->colors = new ArrayCollection;
+    }
+
+    function addColor(Color $color) {
+        $this->colors->add($color);
+        $color->addProduct($this);
     }
 
     function addImage(Image $image){
@@ -94,7 +110,8 @@ class Product {
      */
     public function getPrice(): int
     {
-        return $this->price;
+        $subtractedPrice = $this->price * $this->discountPrecentage;
+        return $this->price - $subtractedPrice;
     }
 
     /**
@@ -139,6 +156,24 @@ class Product {
     public function setId(int $id): self
     {
         $this->id = $id;
+
+        return $this;
+    }
+
+    /**
+     * Get the value of discountPrecentage
+     */
+    public function getDiscountPrecentage(): float
+    {
+        return $this->discountPrecentage;
+    }
+
+    /**
+     * Set the value of discountPrecentage
+     */
+    public function setDiscountPrecentage(float $discountPrecentage): self
+    {
+        $this->discountPrecentage = $discountPrecentage;
 
         return $this;
     }

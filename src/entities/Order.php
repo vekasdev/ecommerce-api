@@ -21,7 +21,7 @@ class Order {
     #[ORM\GeneratedValue]
     private $id;
 
-    #[ORM\ManyToOne(targetEntity:Product::class,inversedBy:"orders",cascade:["persist","remove"])]
+    #[ORM\ManyToOne(targetEntity:Product::class,inversedBy:"orders")]
     private Product $product;
 
     #[Column(type:Types::DATETIME_MUTABLE)]
@@ -36,16 +36,17 @@ class Order {
     private OrderGroup | null $orderGroup;
 
 
-    #[ORM\ManyToOne(targetEntity:Cart::class,inversedBy:"orders",cascade:["persist","remove"])]
+    #[ORM\ManyToOne(targetEntity:Cart::class,inversedBy:"orders",cascade:["persist"])]
     #[ORM\JoinColumn(name:"Cart_id",referencedColumnName:"id",nullable:true)]
-    private Cart $cart;
+    private Cart | null  $cart;
 
-    function multiplyQuantities() {
-        $this->quantity  = $this->quantity * 2;
+    function changeQuantity(int $num = 1 ) {
+        $this->quantity += $num;
     }
     function getTotal() : float{
-        return $this->getProduct()->getPrice() * $this->getQuantity(); 
+        return $this->getProduct()->getPrice()  * $this->getQuantity(); 
     }
+
     /**
      * Get the value of orderGroup
      */

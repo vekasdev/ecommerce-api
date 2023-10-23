@@ -6,5 +6,6 @@ $vendorDir = dirname(dirname(__FILE__));
 $baseDir = dirname($vendorDir);
 
 return array(
+    'ElasticEmail' => array($vendorDir . '/elastic-email/web-api-client/src'),
     '' => array($baseDir . '/src/entities'),
 );

@@ -2,12 +2,16 @@
 
 namespace App\model;
 
+use App\exceptions\UserAuthenticationException;
+use App\exceptions\UserValidationException;
+use App\interfaces\CodeValidationSenderInterface;
 use App\repositories\UsersRepository;
 use Doctrine\ORM\EntityManager;
 use Exception;
 use Firebase\JWT\JWT;
 use Firebase\JWT\Key;
 use User;
+use ValidationCode;
 
 class AuthinticationService{
     // private static $JWT_KEY = base64_encode("49032532KDJSLKFJSDLCSDLJKCMSD984395834KSDLJFKCE3434SDFC");
@@ -15,10 +19,13 @@ class AuthinticationService{
 
     private static $ALGORITHM = "HS256";
 
+    const EXPIRATION_PERIOD = 1;
+
     private UsersRepository $usersRepo;
     function __construct(
         private JWT $jwt,
-        private EntityManager $entityManager
+        private EntityManager $entityManager,
+        private UserServiceFactory $userServiceFactory
     ){
         $this->usersRepo = $entityManager->getRepository(User::class);
     }
@@ -38,14 +45,21 @@ class AuthinticationService{
         );
     }
 
+    /**
+     * @throws UserAuthenticationException where the token is not valid
+     * @throws UserAuthenticationException where user is not valid , or registeration is not completed
+     */
+    function verifySession($token){
+        
+        $result = $this->jwt->decode($token,new Key(self::$JWT_KEY,self::$ALGORITHM));
+        
+        if(!isset($result->data->id)) throw new  UserAuthenticationException("token is not valid");
+        $user = $this->usersRepo->find($result->data->id);
 
-    function verifySession($string){
-        try {
-            $this->jwt->decode($string,new Key(self::$JWT_KEY,self::$ALGORITHM));
-        } catch (Exception $e) {
-            return false;
-        }
-        return true;
+        $userService = $this->userServiceFactory->make($user);
+        if(!$userService->isValid()) throw new UserAuthenticationException("user is not valid , or registeration is not completed");
+        return $userService;
+        
     }
 
     function isUserExist(int $user) : bool {
@@ -56,10 +70,9 @@ class AuthinticationService{
 
     function hashPassword(string $password) : string {
         return password_hash($password,PASSWORD_BCRYPT);
-    }
+    }   
 
     function verifyPassword($password , User $user){
         return password_verify($password,$user->getPassword());
     }
-
 }

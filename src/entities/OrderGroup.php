@@ -1,67 +1,73 @@
 <?php
 
+use App\model\OrderGroupStatus;
+use App\model\OrderTypeStatus;
+use App\repositories\OrderGroupsRepository;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\ORM\Mapping\Column;
 use Doctrine\ORM\Mapping\Entity;
 use Doctrine\ORM\Mapping as ORM;
 use Doctrine\DBAL\Types\Types;
 
-#[Entity()]
+#[Entity(repositoryClass:OrderGroupsRepository::class)]
 #[ORM\Table(name:"orders_group")]
 class OrderGroup {
 
     #[ORM\Id]
     #[ORM\Column(type: Types::INTEGER)]
-    #[ORM\GeneratedValue]
+    #[ORM\GeneratedValue(strategy:"IDENTITY")]
     private $id;
 
-    #[ORM\OneToMany(targetEntity:Order::class,mappedBy:"orderGroup")]
-    private $orders;
 
-    #[Column(type:Types::DATETIME_MUTABLE)]
-    private DateTime $date;
+    #[Column(type:Types::DATETIME_MUTABLE,options:["default"=>"CURRENT_TIMESTAMP"])]
+    private  $date;
 
     #[Column(type:Types::INTEGER)]
-    private int $status = 2;
+    private int $status = OrderGroupStatus::NOT_INITIALIZED;
 
-    #[ORM\OneToOne(targetEntity:OrderGroup::class,mappedBy:"orderGroup")]
+    #[ORM\OneToMany(targetEntity:DeliveryData::class,mappedBy:"orderGroup",cascade:["persist"])]
     #[ORM\JoinColumn(name:"deliveryData_id",referencedColumnName:"id",nullable:true)]
-    private DeliveryData | null $deliveryData;
+    private  $deliveryData;
     
 
     #[ORM\ManyToOne(targetEntity:User::class,inversedBy:"orders",cascade:["persist","remove"])]
     private User $user;
 
 
-    #[ORM\ManyToOne(targetEntity:DiscountCode::class,inversedBy:"orderGroups",cascade:["persist","remove"])]
+    #[ORM\ManyToOne(targetEntity:DiscountCode::class,inversedBy:"orderGroups",cascade:["persist"])]
     #[ORM\JoinColumn(name:"discountCode_id",referencedColumnName:"id",nullable:true)]
     private DiscountCode | null $discountCode;
+
+    #[ORM\OneToOne(targetEntity:Cart::class,inversedBy:"orderGroup")]
+    private Cart $cart;
     
     function __construct(){
-        $this->orders = new ArrayCollection();
+        $this->date = new DateTime();
+        $this->deliveryData  =new ArrayCollection();
     }
-
-    function addOrder(Order $order) {
-        $this->orders->add($order);
-        $order->setOrderGroup($this);
-    }
+    
 
     function getTotal(){
-        $price = 0;
-        /**
-         * @var Order $order
-         */
-        foreach($this->orders as $order) {
-            $price += $order->getTotal();
-        }
-        if(isset($this->deliveryData)){
-            $price += $this->deliveryData->getDeliveryFee();
-        }
+        $total = $this->cart->getTotal();
+
         if(isset($this->discountCode) && $this->discountCode->isValid()) {
-            $price -= $this->discountCode->getAmount();
+            $discountAmount = $total * $this->discountCode->getPrecentage();
+            $total -= $discountAmount;
         }
-        return $price;
+        
+        return $total + $this->getDeliveryCost();
     }
+
+    function getDeliveryCost() {
+        $cost = 0;
+
+        if($this->getDeliveryData()) {
+            $cost = $this->getDeliveryData()->getDeliveryCost();
+        }
+
+        return  $cost;
+    }
+
 
     /**
      * Get the value of status
@@ -121,9 +127,10 @@ class OrderGroup {
     /**
      * Get the value of deliveryData
      */
-    public function getDeliveryData(): DeliveryData
+    public function getDeliveryData(): DeliveryData | null
     {
-        return $this->deliveryData;
+        $dd = $this->deliveryData->first();
+        return !is_bool($dd) ? $dd : null;
     }
 
     /**
@@ -131,7 +138,9 @@ class OrderGroup {
      */
     public function setDeliveryData(DeliveryData $deliveryData): self
     {
-        $this->deliveryData = $deliveryData;
+        $this->deliveryData->clear();
+        $this->deliveryData->add($deliveryData);
+        $deliveryData->setOrderGroup($this);
 
         return $this;
     }
@@ -139,9 +148,9 @@ class OrderGroup {
     /**
      * Get the value of discountCode
      */
-    public function getDiscountCode(): DiscountCode
+    public function getDiscountCode(): DiscountCode | null
     {
-        return $this->discountCode;
+        return is_null($this->discountCode) ? null : $this->discountCode;
     }
 
     /**
@@ -150,7 +159,7 @@ class OrderGroup {
     public function setDiscountCode(DiscountCode $discountCode): self
     {
         $this->discountCode = $discountCode;
-
+        $discountCode->addOrderGroup($this);
         return $this;
     }
 
@@ -169,6 +178,24 @@ class OrderGroup {
     {
         $this->user = $user;
 
+        return $this;
+    }
+
+    /**
+     * Get the value of cart
+     */
+    public function getCart(): Cart
+    {
+        return $this->cart;
+    }
+
+    /**
+     * Set the value of cart
+     */
+    public function setCart(Cart $cart): self
+    {
+        $this->cart = $cart;
+        $this->cart->setOrderGroup($this);
         return $this;
     }
 }
