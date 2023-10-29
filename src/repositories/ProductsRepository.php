@@ -5,8 +5,10 @@ namespace App\repositories;
 
 use App\dtos\ProductData;
 use App\dtos\ProductDataFiltering;
+use App\exceptions\EntityNotExistException;
 use Doctrine\ORM\EntityRepository;
 use Doctrine\ORM\Tools\Pagination\Paginator;
+use Product;
 
 class ProductsRepository extends EntityRepository {
     function addProduct(ProductData $data) : \Product{
@@ -24,15 +26,49 @@ class ProductsRepository extends EntityRepository {
             $product->addCategory($category);
         }
 
-        if(isset($data->colors)) {
-            foreach($data->colors as $color) {
-                $product->addColor($color);
-            }
+
+        foreach($data->colors as $color) {
+            $product->addColor($color);
         }
 
-        if(isset($data->productDiscount)) {
-            $product->setDiscountPrecentage($data->productDiscount);
+        $product->setDiscountPrecentage($data->productDiscount);
+
+        $this->getEntityManager()->persist($product);
+        $this->getEntityManager()->flush();
+        return $product;
+    }
+
+    function updateProduct(int $id,ProductData $productData) : Product {
+        /**
+         * @var Product
+         */
+        $product = $this->find($id);
+        if(!$product) throw new EntityNotExistException("product with id : ".$id."not exist");
+
+        foreach($product->getImages() as $image){
+            $this->getEntityManager()->remove($image);
         }
+
+        $product->clearCategorys();
+        $product->clearColors();
+
+        foreach($productData->images as $image){
+            $product->addImage($image);
+        }
+
+        foreach($productData->categories as $category) {
+            $product->addCategory($category);
+        }
+
+        foreach($productData->colors as $color) {
+            $product->addColor($color);
+        }
+
+        $product->setDescription($productData->description);
+        $product->setPrice($productData->price);
+        $product->setProductName($productData->name);
+        $product->setStockQuantity($productData->stockQuantity);
+        $product->setDiscountPrecentage($productData->productDiscount);
 
         $this->getEntityManager()->persist($product);
         $this->getEntityManager()->flush();

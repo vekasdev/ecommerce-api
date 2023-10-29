@@ -25,11 +25,26 @@ class Category {
         $this->products = new ArrayCollection();
     }
 
+    function getProducts() {
+        
+    }
+
     function addProduct(Product $product) {
         $this->products->add($product);
         $product->addCategory($this);
     }
 
+    function removeProduct(Product $product) {
+        $this->products->removeElement($product);
+    }
+    
+    #[ORM\PreRemove]
+    function preRemove() {
+        foreach($this->products as $product) {
+            $product->removeCategory($this);
+        }
+        $this->products->clear();
+    }
     /**
      * Get the value of categoryName
      */

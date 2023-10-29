@@ -28,4 +28,30 @@ class CategoriesRepository extends EntityRepository {
         }
         return $categories_;
     }
+
+    function updateCategory($id , $name) : Category{
+        if($id instanceof Category){
+            $category = $id;
+        } else if(is_numeric($id)){ 
+            $category = $this->find($id);
+            if(!$category) throw new EntityNotExistException("category not exist");
+        }
+
+        $category->setCategoryName($name);
+
+        $this->getEntityManager()->persist($category);
+        $this->getEntityManager()->flush();
+        return $category;
+    }
+
+    /**
+     * @throws EntityNotExistException
+     */
+    function removeCategory(int $id) {
+        $category = $this->find($id);
+        if(!$category )throw new EntityNotExistException("category with id ".$id." not exist");
+        $this->getEntityManager()->remove($category);
+        $this->getEntityManager()->flush();
+        return $category;
+    }
 }

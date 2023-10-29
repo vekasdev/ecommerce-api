@@ -26,13 +26,13 @@ class Product {
     #[ORM\OneToMany(targetEntity:Order::class,mappedBy:"product")]
     private $orders;
 
-    #[ORM\ManyToMany(targetEntity:Category::class,inversedBy:"products",cascade:["persist","remove"])]
+    #[ORM\ManyToMany(targetEntity:Category::class,inversedBy:"products",cascade:["persist"])]
     private $categories;
 
-    #[ORM\OneToMany(targetEntity:Image::class,mappedBy:"product",cascade:["remove","persist"])]
+    #[ORM\OneToMany(targetEntity:Image::class,mappedBy:"product",cascade:["persist"])]
     private  $images;
 
-    #[ORM\ManyToMany(targetEntity:Color::class,mappedBy:"products")]
+    #[ORM\ManyToMany(targetEntity:Color::class,mappedBy:"products",cascade:["persist"])]
     private $colors;
 
 
@@ -48,23 +48,29 @@ class Product {
         $this->colors = new ArrayCollection;
     }
 
-    function addColor(Color $color) {
-        $this->colors->add($color);
-        $color->addProduct($this);
+    function getImages() {
+        return $this->images;
     }
 
     function addImage(Image $image){
         $this->images->add($image);
         $image->setProduct($this);
+        return $this;
     }
 
     function addCategory(Category $category){
         $this->categories->add($category);
+        return $this;
+    }
+
+    function getCategories() {
+        return $this->categories;
     }
 
     function addOrder(Order $order) {
         $this->orders->add($order);
         $order->setProduct($this);
+        return $this;
     }
 
 
@@ -177,4 +183,72 @@ class Product {
 
         return $this;
     }
+
+    /**
+     * Get the value of likes
+     */
+    public function getLikes()
+    {
+        return $this->likes;
+    }
+
+    /**
+     * Set the value of likes
+     */
+    public function addLike()
+    {
+        $this->likes++;
+
+        return $this;
+    }
+
+    /**
+     * Get the value of colors
+     */
+    public function getColors()
+    {
+        return $this->colors;
+    }
+
+    /**
+     * Set the value of colors
+     */
+    public function addColor(Color $color): self
+    {
+        $this->colors->add($color);
+        $color->addProduct($this);
+        return $this;
+    }
+
+    function clearColors() {
+        /**
+         * @var Color $color
+         */
+        foreach($this->colors as $color) {
+            $color->removeProduct($this);
+        }
+        $this->colors->clear();
+    }
+
+    function clearCategorys() {
+        /**
+         * @var Category $Category
+         */
+        foreach($this->categories as $category) {
+            $category->removeProduct($this);
+        }
+        $this->categories->clear();
+    }
+
+
+    function clearImages() {
+        /**
+         * @var Image $Category
+         */
+        foreach($this->images as $image) {
+            $image->removeProduct();
+        }
+        $this->images->clear();
+    }
+
 }

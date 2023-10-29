@@ -1,6 +1,8 @@
 <?php
 
 use App\controllers\CategoryController;
+use App\controllers\DeliveryRegionController;
+use App\controllers\DiscountCodeController;
 use App\controllers\OrderGroupController;
 use App\controllers\OrdersController;
 use App\controllers\ProductController;
@@ -41,41 +43,35 @@ $app->group("/api/v1",function(RouteCollectorProxy $app){
     
     // requires admin log in
     $app->group("/manage",function(RouteCollectorProxy $app){
+        
         $app->group("/product",function(RouteCollectorProxy $app){
             $app->post("",[ProductController::class,"addProduct"]);
-            // update product
-            // delete product
+            $app->post("/update/{id:[0-9]+}",[ProductController::class,"updateProduct"]);
+            $app->delete("/{id:[0-9]+}",[ProductController::class,"deleteProduct"]);
         });
+
         $app->group("/category",function(RouteCollectorProxy $app){
-            // add category
-            // update category
             $app->post("",[CategoryController::class,"addCategory"]);
+            $app->put("/{id:[0-9]+}",[CategoryController::class,"updateCategory"]);
+            $app->delete("/{id:[0-9]+}",[CategoryController::class,"removeCategory"]);
         });
-        $app->group("/region",function(RouteCollectorProxy $app){
-            // add region and set its cost
-            // modify existed regions
-        });
-        $app->group("/disount-code",function(RouteCollectorProxy $app){
-            // add disount code 
-            // modify discount codes
+        $app->group("/discount-code",function(RouteCollectorProxy $app){
+            $app->post("",[DiscountCodeController::class,"createDiscountCode"]);
+            $app->put("/{id:[0-9]+}",[DiscountCodeController::class,"updateDiscountCode"]);
+            $app->get("",[DiscountCodeController::class,"getDiscountCodes"]);
         });
         $app->group("/order-group",function(RouteCollectorProxy $app){
-            
-            // getOrderGroups with filtering feature
             $app->get("",[OrderGroupController::class,"getOrderGroups"]);
-
-            // updateOrderGroups
             $app->patch("/mark-as-delivered/{id:[0-9]+}",[OrderGroupController::class,"markAsDelivered"]);
-
         });
         $app->group("/delivery-region",function(RouteCollectorProxy $app){
-            //add delivery region
-            //modify existed region
-            //remove region
+            $app->get("",[DeliveryRegionController::class,"getAll"]);
+            $app->post("",[DeliveryRegionController::class,"addDeliveryRegion"]);
+            $app->put("/{id:[0-9]+}",[DeliveryRegionController::class,"updateDeliveryRegion"]);
         });
         $app->group("/user",function(RouteCollectorProxy $app){
             // remove
-            // band
+            // band , user , band its ip's stored in the databases
         });
     });
 });

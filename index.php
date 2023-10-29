@@ -5,6 +5,7 @@ use Slim\Factory\AppFactory;
 
 require_once "vendor/autoload.php";
 require_once "src/enums/APPENUMS.php";
+include      "src/config/functions.php";
 
 // container creation
 $containerDefinitions = require_once("src/config/container-definitions.php");

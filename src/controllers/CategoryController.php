@@ -4,7 +4,11 @@
 namespace App\controllers;
 
 use App\dtos\EntryPersisted;
+use App\exceptions\EntityNotExistException;
+use App\exceptions\RequestValidatorException;
+use App\model\ValidatorFactory;
 use App\repositories\CategoriesRepository;
+use App\validators\AddCategoryValidator;
 use Category;
 use Doctrine\DBAL\Exception\UniqueConstraintViolationException;
 use Doctrine\ORM\EntityManager;
@@ -16,29 +20,65 @@ class CategoryController {
     private CategoriesRepository $categoriesRepository;
     function __construct(
         private EntityManager $entityManager,
-        private ResponseManager $responseManager
+        private ResponseManager $responseManager,
+        private ValidatorFactory $validatorFactory
     ) {
         $this->categoriesRepository = $entityManager->getRepository(Category::class);
     }
 
+    function updateCategory(ServerRequest $request, Response $response, array $args): Response {
+        $id = $args["id"];
+        $data = $request->getParams();
+        try {
+            $this->validatorFactory->make(AddCategoryValidator::class)->validate($data);
+            $category = $this->categoriesRepository->updateCategory($id,$data["name"]);
+            $response = $response->withJson([
+                "success"=> "successful",
+                "message" => "category : ".$category->getCategoryName() ." updated successfully"
+            ]);
+        } catch (UniqueConstraintViolationException $e) {
+            $response = $response->withJson([
+                "status" => "failure",
+                "message" => "category name is exist try another not duplicated values"
+            ],400);
+        } catch (RequestValidatorException $e) {
+            $response = $response->withJson($e,400);
+        } catch (EntityNotExistException $e) {
+            $response = $response->withJson([
+                "status" => "failure",
+                "message" => "category is not exist to modify try another one"
+            ],400);
+        }
+
+        return $response;
+    }
     function addCategory(ServerRequest $req, Response $res){
         $data = $req->getParsedBody();
         try {
-            $category = $this->categoriesRepository->addCategory($data["category-name"]);
+            $category = $this->categoriesRepository->addCategory($data["name"]);
+            $res = $res->withJson(["status"=> "success",
+                "cat-name" => $category->getCategoryName(),
+                "cat-id"   => $category->getId() 
+            ],200);
         }catch (UniqueConstraintViolationException $e) {
-            return $this->responseManager->getResponse(
-                EntryPersistedResponse::class,
-                new EntryPersisted($res,false,["message" => "the category is already exist"])
-            );
+            $res = $res->withJson(["status"=> "failure","message"=> "category is already exist"],400);
+        }catch (RequestValidatorException $e) {
+            $res= $res->withJson($e,400);
         }
 
-        $data = new EntryPersisted($res,true,[
-            "cat-name" => $category->getCategoryName(),
-            "cat-id"   => $category->getId() 
-        ]);
+        return $res;
+    }
 
-        return $this->responseManager->getResponse(
-            EntryPersistedResponse::class,$data
-        );
+    function removeCategory( ServerRequest $req , Response $res,$args )  {
+        $catId = $args["id"];
+        try {
+            $categoryRemoved = $this->categoriesRepository->removeCategory($catId);
+            $res = $res->withJson(["status"=> "success",
+                "message"=> "category".$categoryRemoved->getCategoryName()." removed successfully"],200);
+        } catch (EntityNotExistException $e) {
+            $res = $res->withJson(["status"=> "failure","message"=> $e->getMessage()],400);
+        }
+
+        return $res;
     }
 }

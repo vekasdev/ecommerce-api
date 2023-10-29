@@ -22,8 +22,10 @@ use App\repositories\CategoriesRepository;
 use App\repositories\ColorsRepository;
 use App\repositories\ImageRespository;
 use App\repositories\ImagesRepository;
+use App\validators\AddProductValidator;
 use App\validators\GetProductsValidator;
 use Category;
+use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\DBAL\Exception\UniqueConstraintViolationException;
 use responses\EntryPersistedResponse;
 use responses\JsonResponse;
@@ -84,12 +86,72 @@ class ProductController {
         $data = $req->getParsedBody();
         
         try {
-            
+
+            $this->validatorFactory->make(GetProductsValidator::class)->validate($data);
+
             // getting the related entities
-            $categories = $this->categoriesRepository->getCategories(json_decode($data["categories"]));
-            $colors = isset($data["colors"]) ? $this->colorsRepository->getColors(json_decode($data["colors"]))  : null ;
+            $categories = $this->categoriesRepository->getCategories(CSV2ARRAY($data["categories"]));
+            $colors = $this->colorsRepository->getColors(CSV2ARRAY($data["colors"]));
+
+            $discountPrecentage = $data["discount-precentage"];
+
+            // upload images
             $images = $this->uploadImages($req->getUploadedFiles()["images"]);
-            $discountPrecentage = $data["discount-precentage"] ?? $data["discount-precentage"] ;
+
+            $data = new ProductData(
+                $data["name"],
+                $data["price"],
+                $data["description"],
+                $data["stock-qty"],
+                $categories,
+                $images,
+                $discountPrecentage??$discountPrecentage,
+                $colors
+            );
+    
+            //unique constraint violation
+            $product = $this->productsRepository->addProduct($data);
+            
+            $res = $res->withJson(
+                [
+                    "product-name" => $product->getProductName(),
+                    "id" => $product->getId()
+                ]
+            );
+
+        } catch (UploadedFileException $e) {
+            $res = $res->withJson(["message" =>$e->getMessage()],400);
+        } catch (EntityNotExistException $e) {
+            $res = $res->withJson(["message" =>$e->getMessage()],400);
+        } catch (UniqueConstraintViolationException $e) {
+            $res = $res->withJson(["message" =>$e->getMessage()],400);
+        } catch (RequestValidatorException $e) {
+            $res = $res->withJson($e,400);
+        }
+
+        return $res;
+    }
+
+
+    // this is put method that need a whole fields to update the product
+    function updateProduct(ServerRequest $req, Response $res,$args) {
+        // product id in params
+         // name , price, description, stock-qty, categories, images, colors, discount-precentage
+        try {
+            $data = $req->getParsedBody();
+            $id = $args["id"];
+
+            $this->validatorFactory->make(AddProductValidator::class)->validate($data);
+
+            // getting the related entities
+            $categories = $this->categoriesRepository->getCategories(CSV2ARRAY($data["categories"]));
+            $colors = $this->colorsRepository->getColors(CSV2ARRAY($data["colors"]));
+
+            $discountPrecentage = $data["discount-precentage"];
+
+            // upload images
+            $images = $this->uploadImages($req->getUploadedFiles()["images"]);
+
 
 
             $data = new ProductData(
@@ -100,36 +162,54 @@ class ProductController {
                 $categories,
                 $images,
                 $discountPrecentage??$discountPrecentage,
-                $colors ?? $colors
+                $colors
             );
-    
-
-            //unique constraint violation
-            $product = $this->productsRepository->addProduct($data);
             
-            $dataRes = new ResponseDataTransfer($res,200,[
-                "pname" => $product->getProductName(),
-                "pid" => $product->getId()
-            ]);
+            $product =  $this->productsRepository->find($id);
 
-            
+            $oldImages = $this->getImagesFullFileName($product->getImages());
+
+            $product = $this->productsRepository->updateProduct($id,$data);
+
+            // remove old images from the storage
+            foreach($oldImages as $image) {
+                $this->imagesService->deleteImage($image);
+            }
+
+            $res = $res->withJson(
+                [
+                    "message" => "product updated successfully",
+                    "status" => "success",
+                    "product-name" => $product->getProductName(),
+                    "id" => $product->getId()
+                ]
+            );
+
+            // the duplication exception is on the many to many relationship
         } catch (UploadedFileException $e) {
-            $dataRes = new ResponseDataTransfer($res,400,[
-                "message" =>$e->getMessage()
-            ]);
+            $res = $res->withJson(["message" =>$e->getMessage()],400);
         } catch (EntityNotExistException $e) {
-            $dataRes = new ResponseDataTransfer($res,400,[
-                "message" =>$e->getMessage()
-            ]);
+            $res = $res->withJson(["message" =>$e->getMessage()],400);
         } catch (UniqueConstraintViolationException $e) {
-            $dataRes = new ResponseDataTransfer($res,400,[
-                "message" => "product is already exist ! try other details"
-            ]);
+            $res = $res->withJson(["message" =>"the product updated info has a duplicated match"],400);
+        } catch (RequestValidatorException $e) {
+            $res = $res->withJson($e,400);
         }
 
+        return $res;
+    }
 
-        $response = $this->responseManager->getResponse(JsonResponse::class,$dataRes);
-        return $response;
+    private function getImagesFullFileName($images) {
+        $images_ = [] ;
+
+        /**
+         * @var \Image $image
+         */
+        foreach($images as $image) {
+            array_push($images_,$image->getFullFileName());
+        }
+
+        return $images_;
     }
 
 

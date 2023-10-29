@@ -5,7 +5,10 @@ namespace App\model;
 
 use App\dtos\UploadedImage;
 use App\exceptions\UploadedFileException;
+use Image;
 use Slim\Psr7\UploadedFile;
+
+use function PHPUnit\Framework\fileExists;
 
 class ImagesService {
     public function __construct(
@@ -67,4 +70,17 @@ class ImagesService {
         if(!$image)return false;
         return $image;
     }
+
+    /**
+     * @param string $fqfn file name . extention
+     */
+    function deleteImage(string $fqfn) {
+        $filePath = $this->storageDir."/".$fqfn;
+        if(file_exists($filePath))return unlink($filePath) ; else return false;
+    }
+    
 }
+// $path = realpath(__DIR__ ."/../../public/images/image6538a91f8d1f3.png");
+
+// var_dump( file_exists($path));
+// var_dump(unlink($path));

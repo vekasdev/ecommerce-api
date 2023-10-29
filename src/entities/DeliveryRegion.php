@@ -20,6 +20,9 @@ class DeliveryRegion {
     #[ORM\OneToMany(targetEntity:DeliveryData::class,mappedBy:"deliveryRegion")]
     private $DeliveryData;
 
+    #[ORM\Column(type: Types::BOOLEAN)]
+    private bool $available;
+
     function addDeliveryData(DeliveryData $deliveryData){
         $this->DeliveryData->add($deliveryData);
         $deliveryData->setDeliveryRegion($this);
@@ -66,6 +69,24 @@ class DeliveryRegion {
     public function setDeliveryCost(float $deliveryCost): self
     {
         $this->deliveryCost = $deliveryCost;
+
+        return $this;
+    }
+
+    /**
+     * Get the value of available
+     */
+    public function isAvailable(): bool
+    {
+        return $this->available;
+    }
+
+    /**
+     * Set the value of available
+     */
+    public function setAvailable(bool $available): self
+    {
+        $this->available = $available;
 
         return $this;
     }

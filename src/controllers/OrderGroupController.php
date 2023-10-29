@@ -56,13 +56,11 @@ class OrderGroupController {
         } catch (RequestValidatorException $e ) { 
             $res = $res->withJson($e,400);
         }
-        
         return $res;
     }
 
     function markAsDelivered(ServerRequest $req, Response $res,$args) {
         $orderGroupId = (int) $args["id"];
-        
         try {
             $orderService = $this->orderGroupServiceFactory->make($orderGroupId);
             $orderService->toDeliveredState();
@@ -82,7 +80,5 @@ class OrderGroupController {
         return $res;
     }
 
-    function getOrderGroupDetails(ServerRequest $req, Response $res,$args) {
-        
-    }
+
 }

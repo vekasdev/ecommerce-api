@@ -15,7 +15,7 @@ class DiscountCode {
     #[ORM\Column(type:Types::DECIMAL,precision:2, scale:2)]
     private float $precentage;
 
-    #[ORM\Column(type:Types::STRING)]
+    #[ORM\Column(type:Types::STRING,unique:true)]
     private string $code;
 
     #[ORM\Column(type:Types::BOOLEAN)]
@@ -61,7 +61,7 @@ class DiscountCode {
     /**
      * Set the value of amount
      */
-    public function setAmount(float $precentage): self
+    public function setPrecentage(float $precentage): self
     {
         $this->precentage = $precentage;
 

@@ -23,8 +23,20 @@ class Image {
     private string $extension;
 
 
-    #[ORM\ManyToOne(targetEntity:Product::class,inversedBy:"images",cascade:["persist","remove"])]
-    private Product $product;
+    #[ORM\ManyToOne(targetEntity:Product::class,inversedBy:"images")]
+    #[ORM\JoinColumn(name:"product_id",referencedColumnName:"id", nullable: true)]
+    private Product | null $product;
+
+    function __construct(){
+        
+    }
+
+    #[ORM\PreRemove]
+    function delete() {
+        $this->product->getImages()->removeElement($this);
+        $this->product = null;
+    }
+    
 
     function getFullFileName(){
         return $this->fileName.".".$this->extension;

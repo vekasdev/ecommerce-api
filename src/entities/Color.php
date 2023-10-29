@@ -1,6 +1,7 @@
 <?php
 
 use App\repositories\ColorsRepository;
+use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\ORM\Mapping as ORM;
 use Doctrine\DBAL\Types\Types;
 
@@ -21,8 +22,20 @@ class Color {
     #[ORM\ManyToMany(targetEntity:Product::class,inversedBy:"colors",cascade:["persist","remove"])]
     private $products;
 
+
+    function __construct(){
+        $this->products = new ArrayCollection;
+    }
+
+    function removeProduct(Product $product){
+        $this->products->removeElement($product);
+    }
     function addProduct(Product $product){
         $this->products->add($product);
+    }
+
+    function getProducts(){
+        return $this->products;
     }
 
     /**
