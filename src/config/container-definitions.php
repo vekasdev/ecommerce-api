@@ -10,6 +10,9 @@ use App\model\EmailServiceFactory;
 use App\model\EmailService;
 use App\model\ImagesService;
 use App\model\OrderGroupServiceFactory;
+use App\model\ProductServiceProvider;
+use App\model\PromotionAdService;
+use App\model\PromotionAdServiceProvider;
 use App\model\TelegramAdminstrationNotificationService;
 use App\model\UserService;
 use App\model\UserServiceFactory;
@@ -97,6 +100,13 @@ return [
                                         
     
     CartServiceFactory::class => fn(ContainerInterface $containerInterface)
-                => new CartServiceFactory($containerInterface->get(EntityManager::class))
+                => new CartServiceFactory($containerInterface->get(EntityManager::class)),
+
+
+    ProductServiceProvider::class => fn(ContainerInterface $container) 
+                => new ProductServiceProvider($container->get(EntityManager::class),$container->get(ImagesService::class)),
+    
+    PromotionAdServiceProvider::class => fn(ContainerInterface $ci)
+                => new PromotionAdServiceProvider($ci->get(EntityManager::class),$ci->get(ImagesService::class))
 
 ];

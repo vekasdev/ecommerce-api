@@ -48,11 +48,29 @@ class User {
     #[ORM\OneToMany(targetEntity:DeliveryData::class,mappedBy:"user")]
     private  $deliveryData ;
     
+    #[ORM\ManyToMany(targetEntity:Product::class,mappedBy:"interestedUsers")]
+    private $favorites;
+
     function __construct() {
         $this->orderGroups = new ArrayCollection();
         $this->codes = new ArrayCollection();
         $this->deliveryData = new ArrayCollection;
         $this->carts = new ArrayCollection;
+        $this->favorites = new ArrayCollection();
+    }
+
+    function getFavorites() {
+        return $this->favorites;
+    }
+    
+    function addProductToFavorites(Product $product) {
+        $this->favorites->add($product);
+        $product->addInterestedUser($this);
+    }
+
+    function removeFavoriteProduct(Product $product) { 
+        $this->favorites->removeElement($product);
+        $product->getInterestedUsers()->removeElement($this);
     }
 
     function getOrderGroups() {
@@ -112,6 +130,8 @@ class User {
         $this->orderGroups->add($orderGroup);
         $orderGroup->setUser($this);
     }
+
+
     /**
      * Get the value of id
      */

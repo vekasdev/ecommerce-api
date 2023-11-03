@@ -18,16 +18,12 @@ class CartsRepository extends EntityRepository{
         return $cart;
     }
 
-    // function addOrderToCart(Cart $cart,Order $order) : Cart{
-    //     if($cart->isContainOrder($order)) {
-    //         $cart->removeOrder($order);
-    //         $order->increaseQuantity();
-    //     }
-    //     $cart->addOrder($order);
-    //     $this->getEntityManager()->persist($cart);
-    //     $this->getEntityManager()->flush();
-    //     return $cart;
-    // }
+    function addOrderToCart(Cart $cart,Order $order) : Cart{
+        $cart->addOrder($order);
+        $this->getEntityManager()->persist($cart);
+        $this->getEntityManager()->flush();
+        return $cart;
+    }
 
     function getDetails(Cart $cart) {
         $qb = $this->createQueryBuilder("ca");
@@ -47,6 +43,7 @@ class CartsRepository extends EntityRepository{
 
         return $result;
     }
+
     
     
 }

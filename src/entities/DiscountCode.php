@@ -24,6 +24,9 @@ class DiscountCode {
     #[ORM\OneToMany(targetEntity:OrderGroup::class,mappedBy:"discountCode")]
     private $orderGroups;
 
+    #[ORM\Column(type: Types::BOOLEAN)]
+    private bool $promoted;
+
     function __construct() {
         $this->orderGroups = new ArrayCollection();
     }
@@ -100,6 +103,24 @@ class DiscountCode {
     public function setValid(bool $valid): self
     {
         $this->valid = $valid;
+
+        return $this;
+    }
+
+    /**
+     * Get the value of promoted
+     */
+    public function isPromoted(): bool
+    {
+        return $this->promoted;
+    }
+
+    /**
+     * Set the value of promoted
+     */
+    public function setPromoted(bool $promoted): self
+    {
+        $this->promoted = $promoted;
 
         return $this;
     }

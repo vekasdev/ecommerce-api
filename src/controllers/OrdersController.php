@@ -61,6 +61,7 @@ class OrdersController {
 
     }
 
+
     function changeOrderQty(ServerRequest $req, Response $res,$args) {
 
         // orderId , valueOfChange
@@ -181,10 +182,10 @@ class OrdersController {
     }
 
     function getCost( ServerRequest $req, Response $res,$args) {
-        /**
-         * @var UserService
-         */
+        
+        /** @var UserService */
         $userService = $req->getAttribute("user");
+        
         $orderGroupService = $userService->getOrderGroupService();
 
         $total = $orderGroupService->getTotal();

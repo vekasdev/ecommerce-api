@@ -4,6 +4,7 @@ namespace App\repositories;
 
 use App\exceptions\EntityNotExistException;
 use Category;
+use Doctrine\ORM\AbstractQuery;
 use Doctrine\ORM\EntityRepository;
 
 
@@ -19,11 +20,10 @@ class CategoriesRepository extends EntityRepository {
     /**
      * @param int[] $categories
      */
-    function getCategories(array $categories){ 
+     function getCategories(array $categories){ 
         $categories_  = [];
         foreach($categories as $id) {
-            $category = $this->find($id);
-            if (!$category) throw new EntityNotExistException("the category with id $id not exist");
+            if (!$category=$this->find($id)) throw new EntityNotExistException("the category with id $id not exist");
             array_push($categories_,$category);
         }
         return $categories_;
@@ -53,5 +53,12 @@ class CategoriesRepository extends EntityRepository {
         $this->getEntityManager()->remove($category);
         $this->getEntityManager()->flush();
         return $category;
+    }
+
+    function getAll() {
+        $qb = $this->createQueryBuilder("c");
+        $qb->select("c");
+
+        return $qb->getQuery()->getResult(AbstractQuery::HYDRATE_ARRAY);
     }
 }

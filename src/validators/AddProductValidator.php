@@ -24,10 +24,16 @@ class AddProductValidator extends AbstractValidator {
             "regex" => [
                 ["name","/^[a-zA-Z0-9\s\p{Arabic}]+$/u"],
                 ["description","/^[a-zA-Z0-9\s\p{Arabic}]+$/u"],
-                ["categories","/^\d+[,\d]*$/"],
-                ["colors","/^\d+[,\d]*$/"]
+                ["categories","/^\d+(,\d)*$/"],
+                ["colors","/^\d(,\d)*$/"]
             ],
             "numeric" => ["price","stock-qty","discount-precentage"],
+            "min" => [
+                ["discount-precentage",0]
+            ],
+            "max" =>[
+                ["discount-precentage",100]
+            ]
         ]);
 
         $this->checkValidation($v);

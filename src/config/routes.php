@@ -3,9 +3,11 @@
 use App\controllers\CategoryController;
 use App\controllers\DeliveryRegionController;
 use App\controllers\DiscountCodeController;
+use App\controllers\MainCategoriesController;
 use App\controllers\OrderGroupController;
 use App\controllers\OrdersController;
 use App\controllers\ProductController;
+use App\controllers\PromotionAdController;
 use App\controllers\UsersController;
 use App\middlewares\AdminUserAuthentication;
 use App\middlewares\ForTest;
@@ -18,6 +20,10 @@ use Slim\Routing\RouteCollectorProxy;
 $app->group("/api/v1",function(RouteCollectorProxy $app){
     $app->group("/product",function(RouteCollectorProxy $app){
         $app->get("/get-all",[ProductController::class,"getAllProducts"]);
+        $app->patch("/product-interest-toggle/{product-id:[0-9]+}",[ProductController::class,"productInterestToggle"])
+            ->add(NormalUserAuthentication::class);
+        $app->get("/is-product-in-the-interest-list/{user-id:[0-9]+}/{product-id:[0-9]+}",
+            [ProductController::class,"isProductInTheInterestList"]);
     });
     
     $app->group("/user",function (RouteCollectorProxy $app){
@@ -32,6 +38,11 @@ $app->group("/api/v1",function(RouteCollectorProxy $app){
         $app->put("/addDiscount/{code:[a-z0-9]+}",[OrdersController::class,"addDiscountCode"]);
         $app->get("/get-cost",[OrdersController::class,"getCost"]);
     })->add(NormalUserAuthentication::class);
+
+    $app->group("/category",function(RouteCollectorProxy $app){
+        $app->get("/high-level",[MainCategoriesController::class,"getAll"]);
+        $app->get("/low-level",[CategoryController::class,"getAll"]);
+    });
 
     //user credentials
     $app->group("/cart",function (RouteCollectorProxy $app) {
@@ -55,6 +66,12 @@ $app->group("/api/v1",function(RouteCollectorProxy $app){
             $app->put("/{id:[0-9]+}",[CategoryController::class,"updateCategory"]);
             $app->delete("/{id:[0-9]+}",[CategoryController::class,"removeCategory"]);
         });
+
+        $app->group("/main-category",function ( RouteCollectorProxy $app){
+            $app->post("",[MainCategoriesController::class,"createMainCategory"]);
+            $app->put("/{id:[0-9]+}",[MainCategoriesController::class,"updateMainCategory"]);
+            $app->delete("/{id:[0-9]+}",[MainCategoriesController::class,"deleteCategory"]);
+        });
         $app->group("/discount-code",function(RouteCollectorProxy $app){
             $app->post("",[DiscountCodeController::class,"createDiscountCode"]);
             $app->put("/{id:[0-9]+}",[DiscountCodeController::class,"updateDiscountCode"]);
@@ -73,5 +90,13 @@ $app->group("/api/v1",function(RouteCollectorProxy $app){
             // remove
             // band , user , band its ip's stored in the databases
         });
+
+        $app->group("/promotion-ad",function(RouteCollectorProxy $app){
+            $app->post("",[PromotionAdController::class,"addPromotionAd"]);
+            $app->get("",[PromotionAdController::class,"getPromotionAds"]);
+            $app->delete("/{id:[0-9]+}",[PromotionAdController::class,"deletePromotionAd"]);
+            $app->post("/update/{id:[0-9]+}",[PromotionAdController::class,"updatePromotionAd"]);
+        });
+
     });
 });

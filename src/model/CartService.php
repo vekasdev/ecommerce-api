@@ -30,7 +30,8 @@ class CartService {
     }
 
     function getDetails() {
-        return $this->cartsRepository->getDetails($this->cart);
+        $details =  $this->cartsRepository->getDetails($this->cart);
+        return $details;
     }
 
     function getCart() {

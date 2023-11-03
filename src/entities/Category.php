@@ -17,16 +17,26 @@ class Category {
     #[ORM\Column(type:Types::STRING,unique:true)]
     private $categoryName;
 
-
     #[ORM\ManyToMany(targetEntity:Product::class,mappedBy:"categories")]
     private $products;
 
+    #[ORM\ManyToMany(targetEntity:MainCategory::class,inversedBy:"categories",cascade:["persist"])]
+    private $parentCategories;
+
     function __construct(){
         $this->products = new ArrayCollection();
+        $this->parentCategories = new ArrayCollection();
+    }
+
+    function addParentCategory(MainCategory $category) {
+        $this->parentCategories->add($category);
+    }
+    function getParentCategories() {
+        return $this->parentCategories;
     }
 
     function getProducts() {
-        
+        return $this->products;
     }
 
     function addProduct(Product $product) {

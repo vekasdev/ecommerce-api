@@ -2,6 +2,7 @@
 use DI\ContainerBuilder;
 use Slim\App;
 use Slim\Factory\AppFactory;
+use Slim\Middleware\BodyParsingMiddleware;
 
 require_once "vendor/autoload.php";
 require_once "src/enums/APPENUMS.php";
@@ -16,6 +17,8 @@ $container = $container->build();
 
 $app = AppFactory::create(container:$container);
 
+// add parsing body middleware 
+$app->add(new BodyParsingMiddleware() );
 // add error middleware
 $app->addErrorMiddleware(true,true,true);
 

@@ -27,7 +27,7 @@ class DeliveryData {
 
     #[ORM\ManyToOne(targetEntity:DeliveryRegion::class,inversedBy:"deliveryData")]
     #[ORM\JoinColumn(name:"deliveryRegionId",referencedColumnName:"id",nullable:true)]
-    private $deliveryRegion;
+    private $deliveryRegion = null;
 
     #[ORM\ManyToOne(targetEntity:OrderGroup::class,inversedBy:"deliveryData",cascade:["persist"])]
     private $orderGroup;
@@ -64,7 +64,7 @@ class DeliveryData {
 
     function getDeliveryCost() {
         $cost = 0 ;
-        if($this->delivery) {
+        if($this->delivery && !is_null($this->deliveryRegion)) {
             $cost = $this->deliveryRegion->getDeliveryCost();
         }
 

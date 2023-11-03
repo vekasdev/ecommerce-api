@@ -1,11 +1,13 @@
 <?php
 
-
-// $token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyLCJkYXRhIjp7ImlkIjoiMiJ9fQ.Rl0rGWK0rgY-33DL5u5lwFkaUglrROqgF47JfqdhLgE";
-
+use Doctrine\ORM\AbstractQuery;
 use Slim\Http\Factory\DecoratedResponseFactory;
 use Slim\Psr7\Factory\ResponseFactory;
 use Slim\Psr7\Factory\StreamFactory;
+use Doctrine\ORM\EntityManager;
+use PromotionAd;
+
+
 
 require __DIR__."/../vendor/autoload.php";
 
@@ -24,13 +26,17 @@ require __DIR__."/../vendor/autoload.php";
 
 
 
+
+
+/** @var  EntityManager  */
 $em = require_once __DIR__."/../bootstrap.php";
 
-/**
- * @var OrderGroup
- */
-$og = $em->find(OrderGroup::class,8);
+/** @var  PromotionAd */
+$ad = $em->find(PromotionAd::class,4);
 
-$cart = $og->getCart();
 
-echo $cart->getOrders()->count();
+$image = $ad->getImage();
+
+$em->remove($image);
+$em->flush();
+ 

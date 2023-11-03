@@ -29,7 +29,7 @@ class Product {
     #[ORM\ManyToMany(targetEntity:Category::class,inversedBy:"products",cascade:["persist"])]
     private $categories;
 
-    #[ORM\OneToMany(targetEntity:Image::class,mappedBy:"product",cascade:["persist"])]
+    #[ORM\OneToMany(targetEntity:Image::class,mappedBy:"product",cascade:["persist","remove"])]
     private  $images;
 
     #[ORM\ManyToMany(targetEntity:Color::class,mappedBy:"products",cascade:["persist"])]
@@ -39,13 +39,22 @@ class Product {
     #[ORM\Column(type:Types::DECIMAL,precision:2,scale:1)]
     private float $discountPrecentage = 1.0;
 
-    #[ORM\Column(type:Types::INTEGER)]
-    private $likes = 0;
+    #[ORM\ManyToMany(targetEntity:User::class,inversedBy:"favorites",cascade:["persist"])]
+    private $interestedUsers;
 
     function __construct(){
         $this->categories = new ArrayCollection;    
         $this->images = new ArrayCollection;   
         $this->colors = new ArrayCollection;
+        $this->interestedUsers = new ArrayCollection;
+    }
+
+    function addInterestedUser(User $user): void{
+        $this->interestedUsers->add($user);
+    }
+
+    function getInterestedUsers() {
+        return $this->interestedUsers;
     }
 
     function getImages() {
@@ -184,23 +193,6 @@ class Product {
         return $this;
     }
 
-    /**
-     * Get the value of likes
-     */
-    public function getLikes()
-    {
-        return $this->likes;
-    }
-
-    /**
-     * Set the value of likes
-     */
-    public function addLike()
-    {
-        $this->likes++;
-
-        return $this;
-    }
 
     /**
      * Get the value of colors

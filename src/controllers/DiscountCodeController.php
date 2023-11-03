@@ -54,8 +54,9 @@ class DiscountCodeController {
             $dcode = $this->discountCodeRepository->createDiscountCode(
                 (string) $data["code"],
                 (int) $data["precentage"],
-                (bool) $data["valid"]);
-                
+                (bool) $data["valid"],
+                (bool) $data["promoted"]);
+
             $res = $res->withJson([
                 "status" => "success",
                 "message" => "discount code created successfully",
@@ -87,7 +88,8 @@ class DiscountCodeController {
                 $id,
                 (string) $data["code"],
                 (int) $data["precentage"],
-                (bool) $data["valid"]);
+                (bool) $data["valid"],
+                (bool) $data["promoted"]);
                 
             $res = $res->withJson([
                 "status" => "success",

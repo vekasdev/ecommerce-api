@@ -9,6 +9,8 @@ use App\dtos\ResponseDataTransfer;
 use App\dtos\UploadedImage;
 use App\exceptions\RequestValidatorException;
 use App\exceptions\UploadedFileException;
+use App\model\UserService;
+use App\model\UserServiceFactory;
 use App\repositories\ProductsRepository;
 use Doctrine\ORM\EntityManager;
 use responses\productsResponse;
@@ -17,6 +19,7 @@ use Vekas\ResponseManager\ResponseManager;
 use App\dtos\ProductData;
 use App\exceptions\EntityNotExistException;
 use App\model\ImagesService;
+use App\model\ProductServiceProvider;
 use App\model\ValidatorFactory;
 use App\repositories\CategoriesRepository;
 use App\repositories\ColorsRepository;
@@ -47,7 +50,9 @@ class ProductController {
         private EntityManager $entityManager,
         private ResponseManager $responseManager,
         private ImagesService $imagesService,
-        private ValidatorFactory $validatorFactory
+        private ValidatorFactory $validatorFactory,
+        private UserServiceFactory $userServiceFactory,
+        private ProductServiceProvider $productServiceProvider
     ){
         $this->productsRepository = $entityManager->getRepository(\Product::class);
         $this->imagesRepository = $entityManager->getRepository(\Image::class);
@@ -66,17 +71,17 @@ class ProductController {
             // data filtering
             $filtering = $this->createProductDataFiltering($data);
 
-            // get and response
             $result = $this->productsRepository->getProducts($filtering);
 
             // register how many items returned header
-            $res = $this->getIncomingItemsCountResponse($res,$result["pagesCount"]);
+            $res = $this->addIncomingItemsCountResponseHeader($res,$result["pagesCount"]);
 
-            $resData = new ResponseDataTransfer($res,200,$result["records"]);
+            $res = $res->withJson($result["records"],200);
+
         } catch(RequestValidatorException $e) {
-            $resData = new ResponseDataTransfer($res,400,$e);
+            $res = $res->withJson($e,400);
         }
-        return $this->responseManager->getResponse(JsonResponse::class , $resData);
+        return $res;
     }
 
     function addProduct(ServerRequest $req, Response $res){
@@ -87,13 +92,13 @@ class ProductController {
         
         try {
 
-            $this->validatorFactory->make(GetProductsValidator::class)->validate($data);
+            $this->validatorFactory->make(AddProductValidator::class)->validate($data);
 
             // getting the related entities
             $categories = $this->categoriesRepository->getCategories(CSV2ARRAY($data["categories"]));
             $colors = $this->colorsRepository->getColors(CSV2ARRAY($data["colors"]));
 
-            $discountPrecentage = $data["discount-precentage"];
+            $discountPrecentage = $data["discount-precentage"] * pow(10,-1);
 
             // upload images
             $images = $this->uploadImages($req->getUploadedFiles()["images"]);
@@ -124,7 +129,7 @@ class ProductController {
         } catch (EntityNotExistException $e) {
             $res = $res->withJson(["message" =>$e->getMessage()],400);
         } catch (UniqueConstraintViolationException $e) {
-            $res = $res->withJson(["message" =>$e->getMessage()],400);
+            $res = $res->withJson(["message" =>"product data is duplicated"],400);
         } catch (RequestValidatorException $e) {
             $res = $res->withJson($e,400);
         }
@@ -212,11 +217,54 @@ class ProductController {
         return $images_;
     }
 
+    function productInterestToggle(ServerRequest $request, Response $response, array $args) {  
+        /** @var UserService */
+        $userService = $request->getAttribute("user");
+        $product = (int) $args["product-id"];
+
+        try {
+            $product = $userService->toggleLikeProduct( $product );
+            $res = $response->withJson([
+                "message"    => "toggled favorite",
+                "isFavorite" => $product->getInterestedUsers()->contains($userService->getUser())
+            ],200);
+        }catch(EntityNotExistException $e) {
+            $res = $response->withJson(["status"=>"failure","message"=> $e->getMessage()],400);
+        }
+
+        return $res;
+    }
+
+    function isProductInTheInterestList( ServerRequest $request, Response $response, array $args) {
+        $userId    = (int) $args["user-id"] ;
+        $productId = (int) $args["product-id"];
+
+        try {
+            $result = $this->userServiceFactory->make( $userId )->inTheInterestList( $productId );
+            $res = $response->withJson(["is-in-interest-list" => $result] );
+        } catch (EntityNotExistException $e) { 
+            $res = $response->withJson(["message"=>$e->getMessage()]);            
+        }
+
+        return $res;
+    }
+
+    function deleteProduct(ServerRequest $request, Response $response, array $args) {
+        $productId = (int) $args["id"];
+        try { 
+            $productService = $this->productServiceProvider->make( $productId );
+            $productService->delete();
+            $response = $response->withJson(["status"=> "success","message"=> "product with id $productId deleted successfully"]);
+        } catch (EntityNotExistException $e) { 
+            $response = $response->withJson(["status"=> "failure","message"=> $e->getMessage()],400);
+        }
+        return $response;
+    }
 
     /**
      * @return \Image[]
      */
-    function uploadImages(array $uploadedFiles){
+    private function uploadImages(array $uploadedFiles){
         $images = [];
         /**
          * @var UploadedFile $file
@@ -228,8 +276,9 @@ class ProductController {
         }
         return $images;
     }
+    
 
-    private function createProductDataFiltering(array $data){
+    private  function createProductDataFiltering(array $data){
         $filters = new ProductDataFiltering();
 
         if(isset($data["name"])) $filters->name = $data["name"];
@@ -242,11 +291,12 @@ class ProductController {
         if(isset($data["productDiscount"])) $filters->productDiscount = $data["productDiscount"];
         if(isset($data["fromIndex"])) $filters->fromIndex = $data["fromIndex"];
         if(isset($data["minStockQuantity"])) $filters->minStockQuantity = $data["minStockQuantity"];
-
+        if(isset($data["main-category"])) $filters->mainCategory = $data["main-category"];
+        
         return $filters;
     }
 
-    private function getIncomingItemsCountResponse(ResponseInterface $res,int $pageCount) {
+    private function addIncomingItemsCountResponseHeader(Response $res,int $pageCount) {
         return  $res->withAddedHeader("response-pages-count",$pageCount);
     }
 

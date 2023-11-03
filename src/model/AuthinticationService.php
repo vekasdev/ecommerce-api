@@ -54,9 +54,8 @@ class AuthinticationService{
         $result = $this->jwt->decode($token,new Key(self::$JWT_KEY,self::$ALGORITHM));
         
         if(!isset($result->data->id)) throw new  UserAuthenticationException("token is not valid");
-        $user = $this->usersRepo->find($result->data->id);
 
-        $userService = $this->userServiceFactory->make($user);
+        $userService = $this->userServiceFactory->make( (int) $result->data->id);
         if(!$userService->isValid()) throw new UserAuthenticationException("user is not valid , or registeration is not completed");
         return $userService;
         

@@ -1,6 +1,7 @@
 <?php
 namespace App\middlewares;
 
+use App\exceptions\EntityNotExistException;
 use App\exceptions\UserAuthenticationException;
 use App\model\AuthinticationService;
 use App\model\UserServiceFactory;
@@ -75,6 +76,14 @@ class NormalUserAuthentication {
             $response->getBody()->write(json_encode(
                 [
                     "message" => "token is not valid"
+                ]
+            )
+            );
+        } catch (EntityNotExistException $e) {
+            $response = $this->createJsonResponse(400);
+            $response->getBody()->write(json_encode(
+                [
+                    "message" => $e->getMessage()
                 ]
             )
             );

@@ -36,7 +36,7 @@ class OrderGroup {
 
     #[ORM\ManyToOne(targetEntity:DiscountCode::class,inversedBy:"orderGroups",cascade:["persist"])]
     #[ORM\JoinColumn(name:"discountCode_id",referencedColumnName:"id",nullable:true)]
-    private DiscountCode | null $discountCode;
+    private DiscountCode | null $discountCode = null;
 
     #[ORM\OneToOne(targetEntity:Cart::class,inversedBy:"orderGroup")]
     private Cart $cart;

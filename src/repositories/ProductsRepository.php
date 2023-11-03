@@ -11,8 +11,20 @@ use Doctrine\ORM\Tools\Pagination\Paginator;
 use Product;
 
 class ProductsRepository extends EntityRepository {
-    function addProduct(ProductData $data) : \Product{
-        $product = new \Product;
+
+    /** 
+     * @return int id of deleted product 
+     * @throws EntityNotExistException if the product not exist
+     * */
+    function delete(Product $product) : int {
+        $id = $product->getId();
+        $this->getEntityManager()->remove($product);
+        $this->getEntityManager()->flush();
+        return $id;
+    }
+
+    function addProduct(ProductData $data) : Product{
+        $product = new Product;
         $product->setDescription($data->description);
         $product->setPrice($data->price);
         $product->setProductName($data->name);
@@ -82,7 +94,6 @@ class ProductsRepository extends EntityRepository {
             ->setFirstResult($filtering->fromIndex)
             ->setMaxResults($filtering->limit)
             ->orderBy("p.id")
-            ->leftJoin("p.categories","c")
             ->leftJoin("p.colors","co")
             ->leftJoin("p.images","img");
 
@@ -112,8 +123,17 @@ class ProductsRepository extends EntityRepository {
         }
 
         if(isset($filtering->category)) {
-            $qb->andWhere($qb->expr()->eq("c.id",":categoryId"))
+            $qb ->innerJoin("p.categories","c")
+                ->andWhere($qb->expr()->eq("c.id",":categoryId"))
                 ->setParameter("categoryId",$filtering->category);
+        } else {
+            $qb->leftJoin("p.categories","c");
+        }
+
+        if(isset($filtering->mainCategory)) {
+            $qb ->innerJoin("c.parentCategories","pc")
+                ->andWhere($qb->expr()->eq("pc.id",":mainCategoryId"))
+                ->setParameter("mainCategoryId",$filtering->mainCategory);
         }
 
         if(isset($filtering->productDiscount)) {

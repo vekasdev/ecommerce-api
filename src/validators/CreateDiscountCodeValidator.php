@@ -9,10 +9,11 @@ class CreateDiscountCodeValidator extends AbstractValidator {
         $v =new Validator($data);
         $v->rules(
             [
-                "required" => ["code","precentage","valid"],
+                "required" => ["code","precentage","valid","promoted"],
                 "regex" => [
                     ["code","/^[a-zA-Z0-9]+$/"],
-                    ["valid","/^[0-1]{1}$/"]
+                    ["valid","/^[0-1]{1}$/"],
+                    ["promoted", "/^[0-1]{1}$/"]
                 ],
                 "min" => [["precentage",0]],
                 "max" => [["precentage",100]]

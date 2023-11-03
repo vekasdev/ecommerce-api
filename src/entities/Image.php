@@ -27,17 +27,33 @@ class Image {
     #[ORM\JoinColumn(name:"product_id",referencedColumnName:"id", nullable: true)]
     private Product | null $product;
 
+
+    #[ORM\ManyToOne(targetEntity:PromotionAd::class,inversedBy:"images")]
+    #[ORM\JoinColumn(name:"promotion_ad_id",referencedColumnName:"id", nullable: true)]
+    private PromotionAd | null $promotionAd;
+
     function __construct(){
         
     }
 
     #[ORM\PreRemove]
+    function preRemove() {
+        if($this->promotionAd !== null) {
+            $this->promotionAd->getImages()->removeElement($this);
+        }
+    }
+
+    function setPromotionAd(PromotionAd $promotionAd) {
+        $this->promotionAd = $promotionAd;
+    }
+
+    #[ORM\PreRemove]
     function delete() {
         $this->product->getImages()->removeElement($this);
-        $this->product = null;
     }
     
 
+    /** @return string filename.extention */
     function getFullFileName(){
         return $this->fileName.".".$this->extension;
     }

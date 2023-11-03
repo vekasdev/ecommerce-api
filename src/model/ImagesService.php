@@ -25,7 +25,7 @@ class ImagesService {
                 );
             }
             if(!in_array($uploadedFile->getClientMediaType(),
-                $this->acceptedExtensions)) 
+                $this->acceptedExtensions))
             {
                 throw new UploadedFileException(
                     "file extension not accepted"
@@ -35,6 +35,9 @@ class ImagesService {
         return true;
     }
 
+    /**
+     * @throws UploadedFileException
+     */
     function save(UploadedFile $uploadedFile)  : UploadedImage{
         $this->validate($uploadedFile);
         $fileName = $this->generateRandomName();
@@ -72,7 +75,7 @@ class ImagesService {
     }
 
     /**
-     * @param string $fqfn file name . extention
+     * @param string $fqfn filename.extention
      */
     function deleteImage(string $fqfn) {
         $filePath = $this->storageDir."/".$fqfn;

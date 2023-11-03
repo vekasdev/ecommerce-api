@@ -26,6 +26,10 @@ class CategoryController {
         $this->categoriesRepository = $entityManager->getRepository(Category::class);
     }
 
+    function getAll(ServerRequest $request, Response $response, array $args): Response {
+        return $response->withJson($this->categoriesRepository->getAll());
+    }
+    
     function updateCategory(ServerRequest $request, Response $response, array $args): Response {
         $id = $args["id"];
         $data = $request->getParams();
@@ -81,4 +85,5 @@ class CategoryController {
 
         return $res;
     }
+
 }

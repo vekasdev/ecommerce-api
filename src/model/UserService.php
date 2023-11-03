@@ -2,15 +2,18 @@
 
 namespace App\model;
 
+use App\exceptions\EntityNotExistException;
 use App\exceptions\UserValidationException;
 use App\interfaces\CodeValidationSenderInterface;
 use App\repositories\CartsRepository;
 use App\repositories\DeliveryDataRepository;
 use App\repositories\OrderGroupsRepository;
+use App\repositories\ProductsRepository;
 use Cart;
 use DeliveryData;
 use Doctrine\ORM\EntityManager;
 use OrderGroup;
+use Product;
 use Symfony\Component\Mime\Email;
 use User;
 use ValidationCode;
@@ -23,6 +26,8 @@ class UserService {
     private CartsRepository $cartsRepository;
 
     private DeliveryDataRepository $deliveryDataRepository;
+
+    private ProductsRepository $productsRepository;
 
     /**
      * @param GoogleEmailService|CodeValidationSenderInterface $sender
@@ -38,6 +43,7 @@ class UserService {
         $this->orderGroupRepo = $em->getRepository(OrderGroup::class);
         $this->cartsRepository = $em->getRepository(Cart::class);
         $this->deliveryDataRepository = $em->getRepository(DeliveryData::class);
+        $this->productsRepository = $em->getRepository(Product::class);
     }
 
     /**
@@ -174,4 +180,40 @@ class UserService {
         return $this->orderGroupServiceFactory->make($orderGroup);
     }
 
+    function toggleLikeProduct($_product) {
+        if($_product instanceof Product) {
+            $product = $_product;
+        } else if (is_int($_product)) {
+            $product = $this->productsRepository->find($_product);
+            if(!$product) throw new EntityNotExistException("product not exist");
+        } else {
+            throw new \InvalidArgumentException("product parameter must be of type int or Product class");
+        }
+        if($this->user->getFavorites()->contains($product)) {
+            $this->user->removeFavoriteProduct($product);
+        } else {
+            $this->user->addProductToFavorites($product);
+        }
+        $this->update();
+        return $product;
+    }
+
+    function getUser() {
+        return $this->user;
+    }
+
+    /**
+     * @throws EntityNotExistException
+     */
+    function inTheInterestList($product) {
+        if(is_int($product)) {
+            $product = $this->productsRepository->find($product);
+            if(!$product) throw new EntityNotExistException("product not exist");
+        } else if ($product instanceof \Product){
+
+        } else {
+            throw new \InvalidArgumentException("\$product parameter must be of int type or Product entity class");
+        }
+        return $this->user->getFavorites()->contains($product);
+    }
 }
