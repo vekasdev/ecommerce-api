@@ -110,6 +110,20 @@ class DeliveryRegionController {
         return $res;
     }
 
+    function getDeliveryRegion(ServerRequest $req, Response $res,$args) {
+        $id = $args["id"];
+        $deliveryRegion = $this->deliveryRegionRepository->getDeliveryRegion((int) $id);
+        if(!$deliveryRegion) {
+            $res = $res->withJson([
+                "message" => "delivery region not exist"
+            ],400); 
+        } else {
+            $res = $res->withJson($deliveryRegion); 
+        }
+
+        return $res;
+    }
+
 
     function getFilters(array $filters) : DeliveryRegionDataDTO  {
         $data = new DeliveryRegionDataDTO();

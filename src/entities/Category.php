@@ -35,7 +35,7 @@ class Category {
         return $this->parentCategories;
     }
 
-    function getProducts() {
+    function getProducts() : ArrayCollection{
         return $this->products;
     }
 

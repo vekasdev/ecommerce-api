@@ -40,8 +40,12 @@ class Order {
     #[ORM\JoinColumn(name:"Cart_id",referencedColumnName:"id",nullable:true)]
     private Cart | null  $cart;
 
-    function changeQuantity(int $num = 1 ) {
-        $this->quantity += $num;
+    /** @throws InvalidArgumentException when $num under 0  */
+    function changeQuantity(int $num  ) {
+        if($num < 0) {
+            throw new InvalidArgumentException("\$num must be 0 or more");
+        }
+        $this->quantity = $num;
     }
     function getTotal() : float{
         return $this->getProduct()->getPrice()  * $this->getQuantity(); 

@@ -27,12 +27,43 @@ class DiscountCode {
     #[ORM\Column(type: Types::BOOLEAN)]
     private bool $promoted;
 
+    #[ORM\OneToMany(targetEntity:Image::class,mappedBy:"discountCode",cascade:["persist","remove"])]
+    private $image;
+
     function __construct() {
         $this->orderGroups = new ArrayCollection();
+        $this->image = new ArrayCollection();
+    }
+
+    function setImage(Image $image) {
+        $this->clearImages();
+        $this->image->clear();
+        $this->image->add($image);
+        $image->setDiscountCode($this);
+    }
+
+    function clearImages() {
+        /** @var Image */
+        foreach($this->image as $image) {
+            $image->setDiscountCode(null);
+        }
+    }
+
+    /**
+     * @return Image | null
+     */
+    function getImage() {
+        /** @var Image | bool  */
+        $image = $this->image->first();
+        return !is_bool($image) ?  $image : null;
     }
 
     function addOrderGroup(OrderGroup $orderGroup){
         $this->orderGroups->add($orderGroup);
+    }
+
+    function getOrderGroups() {
+        return $this->orderGroups;
     }
 
     /**

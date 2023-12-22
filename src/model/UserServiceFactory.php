@@ -25,7 +25,7 @@ class UserServiceFactory {
         if(is_int($user)){
             $user = $this->usersRepository->find($user);
             if(!$user) throw new EntityNotExistException("user given not registered in the app");
-        } else if( $user instanceof UserService){}
+        } else if( $user instanceof User){}
         else {
             throw new InvalidArgumentException("\$user parameter must be of type int or User class, ".gettype($user)." given");
         }

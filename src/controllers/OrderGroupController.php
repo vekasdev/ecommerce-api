@@ -80,5 +80,59 @@ class OrderGroupController {
         return $res;
     }
 
+    function dismissOrder(ServerRequest $req, Response $res,$args) {
+        $id = $args["id"];
+        try {
+            $orderService = $this->orderGroupServiceFactory->make((int) $id);
+            $result = $orderService->dismiss();
+            if($result) {
+                $res= $res->withJson([
+                    "message" => "order with id $id dismissed successfully"
+                ]);
+            } else {
+                $res= $res->withJson([
+                    "message" => "order with id $id is already dismissed"
+                ],400);
+            }
+        } catch (EntityNotExistException $e) {
+            $res = $res->withJson(["message"=> $e->getMessage()],400);
+        }
+
+        return $res;
+    }
+
+    // this is required a normal-user authintication , its get's the order groups that are in it's own
+    function getCurrentUserOrderGroups(ServerRequest $req, Response $res,$args) {
+        /** @var UserService $userService */
+        $userService = $req->getAttribute("user");
+        $status = $req->getQueryParam("status");
+        $results = [];
+        switch($status) {
+            case "1" : 
+                $results = $this->orderGroupRepo->getOrderGroups([
+                    "id" => $userService->getUser()->getId(),
+                    "status"  => $status
+                ]);
+                break;
+            case "2": 
+                $results = $this->orderGroupRepo->getOrderGroups([
+                    "id" => $userService->getUser()->getId(),
+                    "status"  => $status
+                ]);
+                break;
+            case "3" :
+                $results = $this->orderGroupRepo->getOrderGroups([
+                    "id" => $userService->getUser()->getId(),
+                    "status"  => $status
+                ]);
+                break;
+            default : 
+                $results = $this->orderGroupRepo->getOrderGroups([
+                    "id" => $userService->getUser()->getId() 
+                ]);
+                break ;
+        }
+        return $res->withJson($results);
+    }
 
 }

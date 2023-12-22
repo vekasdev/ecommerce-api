@@ -20,7 +20,6 @@ class AddProductValidator extends AbstractValidator {
                 "colors",
                 "discount-precentage"
             ],
-
             "regex" => [
                 ["name","/^[a-zA-Z0-9\s\p{Arabic}]+$/u"],
                 ["description","/^[a-zA-Z0-9\s\p{Arabic}]+$/u"],

@@ -6,6 +6,7 @@ namespace App\controllers;
 use App\dtos\ResponseDataTransfer;
 use App\dtos\UserData;
 use App\dtos\UserFiltering;
+use App\exceptions\DuplicatedEntryException;
 use App\exceptions\EntityNotExistException;
 use App\exceptions\RequestValidatorException;
 use App\exceptions\UploadedFileException;
@@ -72,6 +73,8 @@ class PromotionAdController {
         } catch (RequestValidatorException $e) {
             $res = $res->withJson($e,400);
         } catch (UploadedFileException $e) {
+            $res = $res->withJson(["status"=>"failure","message" => $e->getMessage()],400);
+        } catch (DuplicatedEntryException $e) {
             $res = $res->withJson(["status"=>"failure","message" => $e->getMessage()],400);
         }
 

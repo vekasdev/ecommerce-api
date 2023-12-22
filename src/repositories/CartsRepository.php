@@ -27,17 +27,18 @@ class CartsRepository extends EntityRepository{
 
     function getDetails(Cart $cart) {
         $qb = $this->createQueryBuilder("ca");
-        $qb->select("ca,o,pr")
+        $qb->select("ca,o,pr,im")
             ->leftJoin("ca.orders","o")
             ->leftJoin("o.product","pr")
+            ->leftJoin("pr.images","im")
             ->where($qb->expr()->eq("ca.id",":id"));
         $qb->setParameter("id",$cart->getId());
 
+        /** @var Cart */
         $entity = $qb->getQuery()->getSingleResult();
 
         $result = $qb->getQuery()->getArrayResult()[0];
         
-
         // add total to the query
         $result = [...$result , "total" => $entity->getTotal()];
 

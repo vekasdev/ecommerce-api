@@ -30,6 +30,23 @@ class CategoryController {
         return $response->withJson($this->categoriesRepository->getAll());
     }
     
+    function getCategory(ServerRequest $req, Response $res, array $args) {
+        $id = (int) $args["id"];
+        try { 
+            /** @var Category $category */
+            if (! $category = $this->categoriesRepository->find($id)) {
+                throw new EntityNotExistException ("category with id $id not exist");
+            }
+            $res = $res->withJson([
+                "name" => $category->getCategoryName(),
+                "id" => $category->getId()
+            ]);
+        } catch(EntityNotExistException $e ) {
+            $res = $res->withJson(["message"=>$e->getMessage()],400);
+        }
+        return $res;
+    }
+
     function updateCategory(ServerRequest $request, Response $response, array $args): Response {
         $id = $args["id"];
         $data = $request->getParams();

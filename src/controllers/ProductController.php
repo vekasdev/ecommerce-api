@@ -74,12 +74,23 @@ class ProductController {
             $result = $this->productsRepository->getProducts($filtering);
 
             // register how many items returned header
-            $res = $this->addIncomingItemsCountResponseHeader($res,$result["pagesCount"]);
+            // $res = $this->addIncomingItemsCountResponseHeader($res,$result["pagesCount"]);
 
-            $res = $res->withJson($result["records"],200);
+            $res = $res->withJson($result,200);
 
         } catch(RequestValidatorException $e) {
             $res = $res->withJson($e,400);
+        }
+        return $res;
+    }
+
+    function getProduct(ServerRequest $req, Response $res,$args ) {
+        $id = (int) $args["id"];
+        try {
+            $data = $this->productsRepository->getProduct($id);
+            $res = $res->withJson($data);
+        } catch (EntityNotExistException $e) { 
+            $res = $res->withJson(["message" => $e->getMessage()],400);
         }
         return $res;
     }
@@ -100,8 +111,15 @@ class ProductController {
 
             $discountPrecentage = $data["discount-precentage"] * pow(10,-1);
 
+
+            $uploadedMessages = $req->getUploadedFiles()["images"];
+            if (! $uploadedMessages) {
+                return $res->withJson([
+                    "message" => "the images for product must be uploaded"
+                ],400);
+            }
             // upload images
-            $images = $this->uploadImages($req->getUploadedFiles()["images"]);
+            $images = $this->uploadImages($uploadedMessages);
 
             $data = new ProductData(
                 $data["name"],
@@ -155,9 +173,10 @@ class ProductController {
             $discountPrecentage = $data["discount-precentage"];
 
             // upload images
-            $images = $this->uploadImages($req->getUploadedFiles()["images"]);
-
-
+            $_images = $req->getUploadedFiles()["images"]??null;
+            if($_images) {
+                $images = $this->uploadImages($req->getUploadedFiles()["images"]);
+            }
 
             $data = new ProductData(
                 $data["name"],
@@ -165,20 +184,26 @@ class ProductController {
                 $data["description"],
                 $data["stock-qty"],
                 $categories,
-                $images,
+                $images??[],
                 $discountPrecentage??$discountPrecentage,
                 $colors
             );
-            
-            $product =  $this->productsRepository->find($id);
 
-            $oldImages = $this->getImagesFullFileName($product->getImages());
+            if(!$product =  $this->productsRepository->find($id)) {
+                throw new EntityNotExistException("product with id $id not exist");
+            }
+
+            if ( $_images ) {
+                $oldImages = $this->getImagesFullFileName($product->getImages());
+            }
 
             $product = $this->productsRepository->updateProduct($id,$data);
 
-            // remove old images from the storage
-            foreach($oldImages as $image) {
-                $this->imagesService->deleteImage($image);
+            if ($_images) {
+                // remove old images from the storage
+                foreach($oldImages as $image) {
+                    $this->imagesService->deleteImage($image);
+                }
             }
 
             $res = $res->withJson(
@@ -282,14 +307,15 @@ class ProductController {
         $filters = new ProductDataFiltering();
 
         if(isset($data["name"])) $filters->name = $data["name"];
-        if(isset($data["category"])) $filters->category = $data["category"];
+        if(isset($data["category"])) $filters->category = (int) $data["category"];
         if(isset($data["description"])) $filters->description = $data["description"];
         if(isset($data["color"])) $filters->color = $data["color"];
-        if(isset($data["limit"])) $filters->limit = $data["limit"];
+        // default limit , can set manually in database
+        if(isset($data["limit"])) $filters->limit = (int) $data["limit"] ; else $filters->limit = 50;
         if(isset($data["minPrice"])) $filters->minPrice = $data["minPrice"];
         if(isset($data["maxPrice"])) $filters->maxPrice = $data["maxPrice"];
         if(isset($data["productDiscount"])) $filters->productDiscount = $data["productDiscount"];
-        if(isset($data["fromIndex"])) $filters->fromIndex = $data["fromIndex"];
+        if(isset($data["fromIndex"])) $filters->fromIndex = $data["fromIndex"] ; else $filters->fromIndex = 0;
         if(isset($data["minStockQuantity"])) $filters->minStockQuantity = $data["minStockQuantity"];
         if(isset($data["main-category"])) $filters->mainCategory = $data["main-category"];
         
@@ -297,7 +323,7 @@ class ProductController {
     }
 
     private function addIncomingItemsCountResponseHeader(Response $res,int $pageCount) {
-        return  $res->withAddedHeader("response-pages-count",$pageCount);
+        return  $res->withAddedHeader("Page-Count",$pageCount);
     }
 
 }

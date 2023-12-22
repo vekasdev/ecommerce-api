@@ -132,19 +132,13 @@ class UserService {
      */
     private function createOrderGroup() {
 
-        // get default or new delivery data
-        $deliveryData = $this->getDeliveryData();
-        
         // new order group
         $orderGroup = $this->orderGroupRepo->createOrderGroup();
 
-
-        // set delivery data , cart
-        $orderGroup->setDeliveryData( $deliveryData )
-            ->setCart($this->getCartService()->getCart());        
+        // cart
+        $orderGroup->setCart($this->getCartService()->getCart());        
 
         $this->user->addOrderGroup($orderGroup);
-        $this->user->addDeliveryData($deliveryData);
         
         // update user in database
         $this->update();
@@ -152,7 +146,24 @@ class UserService {
         return $orderGroup;
     }
 
+    function unDefaultDeliveryData() {
+        $qb =$this->em->createQueryBuilder(); 
+        $results  = $qb->select("dd")
+        ->from(DeliveryData::class,"dd")
+        ->innerJoin("dd.user","u")
+        ->where("u.id = :userId")
+        ->setParameter("userId",$this->getUser()->getId())
+        ->getQuery()
+        ->getResult();
 
+        /** @var DeliveryData $deliveryData */
+        foreach($results as $deliveryData) {
+            $dd = $deliveryData->setDefaultData(false);
+            $this->em->persist($dd);
+        }
+
+        $this->em->flush();
+    }
 
 
     function getDeliveryData() {
@@ -164,6 +175,12 @@ class UserService {
         } 
         return $deliveryData;
     }
+
+    function getDefaultDeliveryData() {
+        return $this->user->getDefaultDeliveryData() ?? false;
+    }
+
+
     public function getCartService() : CartService {
         $cart = $this->user->getNonProcessedCart();
         if($cart == null ) $cart = $this->cartsRepository->createCart($this->user);
@@ -174,8 +191,6 @@ class UserService {
         if(! $orderGroup = $this->user->getUnInitializedOrderGroup()){
             $orderGroup = $this->createOrderGroup();
         };
-
-        
 
         return $this->orderGroupServiceFactory->make($orderGroup);
     }

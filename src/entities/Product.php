@@ -23,7 +23,7 @@ class Product {
     #[ORM\Column(type:Types::INTEGER,length:10)]
     private int $stock_quantity;
 
-    #[ORM\OneToMany(targetEntity:Order::class,mappedBy:"product")]
+    #[ORM\OneToMany(targetEntity:Order::class,mappedBy:"product",cascade:["remove"])]
     private $orders;
 
     #[ORM\ManyToMany(targetEntity:Category::class,inversedBy:"products",cascade:["persist"])]
@@ -36,7 +36,7 @@ class Product {
     private $colors;
 
 
-    #[ORM\Column(type:Types::DECIMAL,precision:2,scale:1)]
+    #[ORM\Column(type:Types::DECIMAL,precision:3,scale:2)]
     private float $discountPrecentage = 1.0;
 
     #[ORM\ManyToMany(targetEntity:User::class,inversedBy:"favorites",cascade:["persist"])]
@@ -82,7 +82,26 @@ class Product {
         return $this;
     }
 
+    
+    #[ORM\PreRemove]
+    function onRemove() {
 
+        /** @var Category $category */
+        foreach($this->categories as $category) {
+            $category->getProducts()->removeElement($this);
+        }
+
+        /** @var Color $color */
+        foreach($this->colors as $color) {
+            $color->getProducts()->removeElement($this);
+        }
+
+        /** @var User $interestedUser */
+        foreach($this->interestedUsers as $interestedUser) {
+            $interestedUser->getFavorites()->removeElement($this);
+        }
+
+    }
 
     /**
      * Get the value of product_name
@@ -127,6 +146,10 @@ class Product {
     {
         $subtractedPrice = $this->price * $this->discountPrecentage;
         return $this->price - $subtractedPrice;
+    }
+
+    function getOriginalPrice() {
+        return $this->price;
     }
 
     /**

@@ -7,6 +7,9 @@ use App\exceptions\EntityNotExistException;
 use DeliveryRegion;
 use Doctrine\ORM\AbstractQuery;
 use Doctrine\ORM\EntityRepository;
+use Doctrine\ORM\NoResultException;
+
+use function Symfony\Component\DependencyInjection\Loader\Configurator\abstract_arg;
 
 class DeliveryRegionRepository extends EntityRepository {
     function getAll(null | DeliveryRegionDataDTO $filter = null) {
@@ -14,10 +17,10 @@ class DeliveryRegionRepository extends EntityRepository {
         $qb->select("dr");
         if($filter !== null) {
             if($filter->region !== null ) {
-                $qb->andWhere($qb->expr()->eq("dr.name",":name"))->set("name", $filter->region);
+                $qb->andWhere($qb->expr()->like("dr.name",":name"))->setParameter("name", $filter->region);
             }
             if($filter->cost != null) {
-                $qb->andWhere($qb->expr()->gt("dr.deliveryCost",":cost"))->setParameter("cost", $filter->cost);
+                $qb->andWhere($qb->expr()->gte("dr.deliveryCost",":cost"))->setParameter("cost", $filter->cost);
             }
             if($filter->available !== null) {
                 $qb->andWhere($qb->expr()->eq("dr.available",":available"))->setParameter("available", $filter->available);
@@ -52,6 +55,17 @@ class DeliveryRegionRepository extends EntityRepository {
         $this->getEntityManager()->persist($dg);
         $this->getEntityManager()->flush();
         return $dg;
+    }
+
+    function getDeliveryRegion($id) {
+        $qb = $this->createQueryBuilder("dg");
+        $qb->select("dg")
+            ->where($qb->expr()->eq("dg.id","?1"))
+            ->setParameter(1,$id);
+        try {
+            return $qb->getQuery()->getSingleResult(AbstractQuery::HYDRATE_ARRAY);
+        } catch (NoResultException $e) {}
+        return null;
     }
     
 }

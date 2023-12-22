@@ -25,7 +25,7 @@ class OrderGroup {
     #[Column(type:Types::INTEGER)]
     private int $status = OrderGroupStatus::NOT_INITIALIZED;
 
-    #[ORM\OneToMany(targetEntity:DeliveryData::class,mappedBy:"orderGroup",cascade:["persist"])]
+    #[ORM\ManyToMany(targetEntity:DeliveryData::class,mappedBy:"orderGroup",cascade:["persist"])]
     #[ORM\JoinColumn(name:"deliveryData_id",referencedColumnName:"id",nullable:true)]
     private  $deliveryData;
     
@@ -33,17 +33,16 @@ class OrderGroup {
     #[ORM\ManyToOne(targetEntity:User::class,inversedBy:"orders",cascade:["persist","remove"])]
     private User $user;
 
-
     #[ORM\ManyToOne(targetEntity:DiscountCode::class,inversedBy:"orderGroups",cascade:["persist"])]
     #[ORM\JoinColumn(name:"discountCode_id",referencedColumnName:"id",nullable:true)]
     private DiscountCode | null $discountCode = null;
 
-    #[ORM\OneToOne(targetEntity:Cart::class,inversedBy:"orderGroup")]
+    #[ORM\OneToOne(targetEntity:Cart::class,inversedBy:"orderGroup",cascade:["remove"])]
     private Cart $cart;
     
     function __construct(){
         $this->date = new DateTime();
-        $this->deliveryData  =new ArrayCollection();
+        $this->deliveryData  = new ArrayCollection();
     }
     
 
@@ -59,7 +58,7 @@ class OrderGroup {
     }
 
     function getDeliveryCost() {
-        $cost = 0;
+        $cost = 0.0;
 
         if($this->getDeliveryData()) {
             $cost = $this->getDeliveryData()->getDeliveryCost();

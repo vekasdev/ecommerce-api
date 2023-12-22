@@ -16,7 +16,7 @@ class ProductData {
         public string $description,
         public string $stockQuantity,
         public array $categories,
-        public array $images,
+        public array $images = [],
         public float | null $productDiscount = null,
         public array | null $colors          = null
     ){}

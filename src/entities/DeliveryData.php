@@ -1,6 +1,7 @@
 <?php
 
 use App\repositories\DeliveryDataRepository;
+use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\ORM\Mapping\Entity;
 use Doctrine\ORM\Mapping as ORM;
 use Doctrine\DBAL\Types\Types;
@@ -29,7 +30,7 @@ class DeliveryData {
     #[ORM\JoinColumn(name:"deliveryRegionId",referencedColumnName:"id",nullable:true)]
     private $deliveryRegion = null;
 
-    #[ORM\ManyToOne(targetEntity:OrderGroup::class,inversedBy:"deliveryData",cascade:["persist"])]
+    #[ORM\ManyToMany(targetEntity:OrderGroup::class,inversedBy:"deliveryData",cascade:["persist"])]
     private $orderGroup;
 
     #[ORM\ManyToOne(targetEntity:User::class,cascade:["persist","remove"],inversedBy:"deliveryData")]
@@ -45,6 +46,9 @@ class DeliveryData {
     #[ORM\Column(type: Types::BOOLEAN,nullable:true)]
     private bool $delivery = true;
     
+    function __construct(){
+        $this->orderGroup = new ArrayCollection();
+    }
 
     function setUser(User $user) {
         $this->user = $user;
@@ -63,7 +67,7 @@ class DeliveryData {
     }
 
     function getDeliveryCost() {
-        $cost = 0 ;
+        $cost = 0.0 ;
         if($this->delivery && !is_null($this->deliveryRegion)) {
             $cost = $this->deliveryRegion->getDeliveryCost();
         }
@@ -164,8 +168,8 @@ class DeliveryData {
      */
     public function setOrderGroup($orderGroup): self
     {
-        $this->orderGroup = $orderGroup;
-
+        $this->orderGroup->add($orderGroup);
+        
         return $this;
     }
 

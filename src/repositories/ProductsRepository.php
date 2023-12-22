@@ -6,6 +6,7 @@ namespace App\repositories;
 use App\dtos\ProductData;
 use App\dtos\ProductDataFiltering;
 use App\exceptions\EntityNotExistException;
+use Doctrine\ORM\AbstractQuery;
 use Doctrine\ORM\EntityRepository;
 use Doctrine\ORM\Tools\Pagination\Paginator;
 use Product;
@@ -57,8 +58,10 @@ class ProductsRepository extends EntityRepository {
         $product = $this->find($id);
         if(!$product) throw new EntityNotExistException("product with id : ".$id."not exist");
 
-        foreach($product->getImages() as $image){
-            $this->getEntityManager()->remove($image);
+        if (count($productData->images)>0){
+            foreach($product->getImages() as $image){
+                $this->getEntityManager()->remove($image);
+            }
         }
 
         $product->clearCategorys();
@@ -146,12 +149,69 @@ class ProductsRepository extends EntityRepository {
                 ->setParameter("colorId",$filtering->color);
         }
 
-        $paginator = new Paginator($qb);
+        $paginator = new Paginator($qb,true);
+
+        $data = [];
+
+        /** @var Product $product */
+        foreach($paginator as $product) {
+            array_push($data,$this->productToArray($product));
+        }
 
         return [
-            "records" => $statement->getQuery()->getArrayResult(),
-            "pagesCount" => $paginator->count() / $filtering->limit
+            "records" => $data,
+            "products-number" => $paginator->count() 
         ];
+
+    }
+
+    function getProduct($id){ 
+        if(!$product = $this->find($id)) throw new EntityNotExistException("product with id  : $id not exist");
+        return $this->productToArray($product);
+    }
+
+    /** @param  Product $product */
+    function productToArray($product) : array {
+        $data = [];
+        $data["name"] = $product->getProductName();
+        $data["id"] = $product->getId();
+        $data["price"] = $product->getOriginalPrice();
+        $data["description"] = $product->getDescription();
+        $data["discount"] = $product->getDiscountPrecentage();
+        $data["stock-quantity"] = $product->getStockQuantity();
+        
+        // assosiation
+        $data["images"] = [];
+        $data["colors"] = [];
+        $data["categories"] = [];
+
+
+        /** @var \Image $image */
+        foreach($product->getImages() as $image) {
+            array_push($data["images"], [
+                "name" => $image->getFileName(),
+                "extention" => $image->getExtension()
+            ]);
+        }
+
+        /** @var \Color $color */
+        foreach($product->getColors() as $color) {
+            array_push($data["colors"], [
+                "name" => $color->getColorName(),
+                "hex-code" => $color->getColorHexCode(),
+                "id" => $color->getId()
+            ]);
+        }
+
+        /** @var \Category $category */
+        foreach($product->getCategories() as $category) {
+            array_push($data["categories"], [
+                "name" => $category->getCategoryName(),
+                "id" => $category->getId(),
+            ]);
+        }
+        return $data;
+
     }
     
 }

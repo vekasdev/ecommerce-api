@@ -15,9 +15,11 @@ use App\repositories\DiscountCodeRepository;
 use DeliveryData;
 use Doctrine\ORM\EntityManager;
 use App\model\TelegramAdminstrationNotificationService;
+use DI\Container;
 use DiscountCode;
+use Doctrine\ORM\NoResultException;
 use OrderGroup;
-
+use Psr\Container\ContainerInterface;
 
 class OrderGroupService {
 
@@ -34,6 +36,7 @@ class OrderGroupService {
         private EntityManager $em,
         private NotificationSender $notificationSender,
         private CartServiceFactory $cartServiceFactory,
+        private ContainerInterface $container
         )
     {
         $this->deliveryDataRepository = $em->getRepository(DeliveryData::class);
@@ -82,24 +85,41 @@ class OrderGroupService {
     }
 
     function setDeliveryData(DeliveryDataDTO $deliveryDataDTO) {
-        $deliveryData = $this->orderGroup->getDeliveryData();
-        return $deliveryData = $this->deliveryDataRepository->updateDeliveryData($deliveryData , $deliveryDataDTO);
+        
+        // search in order-group
+        if(! $deliveryData = $this->orderGroup->getDeliveryData()) {
+            // search in user
+            if(! $deliveryData  = $this->getUserService()->getDefaultDeliveryData()) {
+                // create an empty delivery data
+                $deliveryData = $this->deliveryDataRepository->createDeliveryData($this->orderGroup->getUser());
+            }
+            // attach new delivery data here to it
+            $this->orderGroup->setDeliveryData($deliveryData);
+        }
+
+        $updatedDeliveryData = $this->deliveryDataRepository->updateDeliveryData($deliveryData , $deliveryDataDTO);
+        $this->update();
+        return $updatedDeliveryData;
     }
 
-    function getDetails() {
-        // [orders : [[count,name,total price],...] , total with disount, discount precentage , delivery cost ]
+    private  function getUserService() {
+        /** @var UserServiceFactory */
+        $factory = $this->container->get(UserServiceFactory::class);
+        return $factory->make($this->orderGroup->getUser());
     }
 
     function validateDeliveryData() {
         $deliveryData= $this->orderGroup->getDeliveryData();
-        
-        if( $deliveryData->getDeliveryRegion() == null || 
+
+        if( 
+            $deliveryData                      == null ||
+            $deliveryData->getDeliveryRegion() == null || 
             $deliveryData->getLocation()       == null || 
             $deliveryData->getPhoneNumber()    == null ||
             $deliveryData->getName()           == null ||
             $deliveryData->getPostalCode()     == null 
         )   
-        throw new  OrderingProcessException("delivery data must be properly provided , id : ".$deliveryData->getId() );
+        throw new  OrderingProcessException("delivery data must be properly provided ");
 
         return true;
     }
@@ -111,6 +131,7 @@ class OrderGroupService {
 
     function validateCart() {
         if($this->orderGroup->getCart()->getOrders()->count() < 1  ) {
+            // var_dump($this->orderGroup->getCart()->getOrders()->count());exit;
              throw new  OrderingProcessException("cart must have at least one order");
         }
         return true;
@@ -136,6 +157,26 @@ class OrderGroupService {
         return $this->orderGroup;
     }
 
+    function dismiss() {
+        if($this->orderGroup->getStatus() == OrderGroupStatus::NOT_INITIALIZED) {
+            return false;
+        }
+        $this->orderGroup->setStatus(OrderGroupStatus::NOT_INITIALIZED);
+        $this->update();
+        return true;
+    }
+
+    /**
+     * @return array | null
+     */
+    function getDeliveryData() {
+        try {
+            $data = $this->deliveryDataRepository->getDefaultDeliveryData($this->orderGroup->getUser()->getId());
+            return $data;
+        } catch (NoResultException $e) {}
+
+        return null;
+    }
 
 
 }

@@ -32,6 +32,10 @@ class Image {
     #[ORM\JoinColumn(name:"promotion_ad_id",referencedColumnName:"id", nullable: true)]
     private PromotionAd | null $promotionAd;
 
+    #[ORM\ManyToOne(targetEntity:DiscountCode::class,inversedBy:"image")]
+    #[ORM\JoinColumn(referencedColumnName:"id", nullable: true)]
+    private $discountCode;
+
     function __construct(){
         
     }
@@ -41,6 +45,11 @@ class Image {
         if($this->promotionAd !== null) {
             $this->promotionAd->getImages()->removeElement($this);
         }
+    }
+
+
+    function setDiscountCode(DiscountCode | null $discountCode) {
+        $this->discountCode = $discountCode;
     }
 
     function setPromotionAd(PromotionAd $promotionAd) {

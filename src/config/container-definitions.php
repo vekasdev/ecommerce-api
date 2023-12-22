@@ -96,6 +96,7 @@ return [
         => new OrderGroupServiceFactory($containerInterface->get(EntityManager::class),
                                         $containerInterface->get(NotificationSender::class),
                                         $containerInterface->get(CartServiceFactory::class),
+                                        $containerInterface
                                     ),
                                         
     

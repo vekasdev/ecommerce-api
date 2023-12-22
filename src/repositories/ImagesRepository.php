@@ -15,4 +15,14 @@ class ImagesRepository extends EntityRepository {
         $this->getEntityManager()->persist($image);
         return $image;
     }
+
+    function getImage($fileName) : Image {
+        $qb = $this->createQueryBuilder("i");
+        $query = $qb->select("i")
+        ->where($qb->expr()->eq("i.fileName","?1"))
+        ->setParameter(1,$fileName)
+        ->getQuery();
+
+        return $query->getSingleResult();
+    }
 }

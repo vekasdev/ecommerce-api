@@ -61,6 +61,17 @@ class OrdersController {
 
     }
 
+    function getOrdersCount(ServerRequest $req, Response $res,$args) {
+        /** @var UserService */
+         $userService = $req->getAttribute("user");
+
+         $cartService = $userService->getCartService();
+
+         return $res->withJson([
+            "count" => $cartService->getOrdersCount()
+         ]);
+    }
+
 
     function changeOrderQty(ServerRequest $req, Response $res,$args) {
 
@@ -74,12 +85,16 @@ class OrdersController {
 
          $orderId = (int) $args["orderId"];
 
-         $userService->getCartService()->changeOrderQuantity($orderId,$valueOfChange);
+         try {
+             $userService->getCartService()->changeOrderQuantity($orderId,$valueOfChange);
+             $res = $res->withJson(
+                $userService->getCartService()->getDetails(),200
+            );
+         } catch (EntityNotExistException $e) {
+            $res = $res->withJson(["message"=> $e->getMessage()],400);  
+        }
 
-
-        return $res->withJson(
-            $userService->getCartService()->getDetails(),200
-        );
+        return $res;
     }
 
 
@@ -110,7 +125,6 @@ class OrdersController {
          * @var UserService
          */
         $userService = $req->getAttribute("user");
-
         $orderService = $userService->getOrderGroupService();
         
         try {
@@ -197,6 +211,22 @@ class OrdersController {
         ],200);
     }
     
+    function getDefaultDeliveryData(ServerRequest $req, Response $res,$args) {
+        /** @var UserService $user */
+        $user = $req->getAttribute("user");
+
+        $orderGroup = $user->getOrderGroupService();
+
+        if(!$deliveryData = $orderGroup->getDeliveryData()) {
+            $res = $res->withJson(["message"=>"there is no default delivery data set"],400);
+        }else {
+            $res = $res->withJson($deliveryData);
+        }
+        
+        return $res;
+    }
+
+
     /**
      * @throws EntityNotExistException
      */
@@ -209,10 +239,12 @@ class OrdersController {
             $data['location'],
             $region,
             $data['postal-code'],
-            $data['maps-location'],
+            (isset($data['maps-location']))?$data['maps-location']:"",
             (isset($data["defaultData"])) & ($data["defaultData"] ==1) ? true : false,
             (isset($data["delivery"])) & ($data["delivery"] ==1) ? true : false,
         );
     }
+
+    
 
 }

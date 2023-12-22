@@ -30,7 +30,7 @@ class User {
     #[ORM\Column(type:Types::STRING)]
     private $address;
 
-    #[ORM\OneToMany(targetEntity:OrderGroup::class,mappedBy:"user")]
+    #[ORM\OneToMany(targetEntity:OrderGroup::class,mappedBy:"user",cascade:["persist"])]
     private $orderGroups;
 
     #[ORM\Column(type:Types::BOOLEAN)]
@@ -45,7 +45,7 @@ class User {
     #[ORM\OneToMany(targetEntity:ValidationCode::class,mappedBy:"user",cascade:["persist","remove"])]
     private $codes;
 
-    #[ORM\OneToMany(targetEntity:DeliveryData::class,mappedBy:"user")]
+    #[ORM\OneToMany(targetEntity:DeliveryData::class,mappedBy:"user",cascade:["persist"])]
     private  $deliveryData ;
     
     #[ORM\ManyToMany(targetEntity:Product::class,mappedBy:"interestedUsers")]

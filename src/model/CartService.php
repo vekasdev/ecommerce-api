@@ -56,7 +56,7 @@ class CartService {
         foreach ( $this->cart->getOrders() as $cartOrder ) {
             if ( $orderObj->getProduct() == $cartOrder->getProduct() ) {
                 // increase quantity by 1
-                $cartOrder->changeQuantity($orderObj->getQuantity());
+                $cartOrder->changeQuantity($cartOrder->getQuantity() + $orderObj->getQuantity());
 
                 // persist changes
                 $this->entityManager->persist($cartOrder);
@@ -72,7 +72,7 @@ class CartService {
         $this->cart = $this->cartsRepository->addOrderToCart($this->cart,$orderObj);
     }
 
-    function changeOrderQuantity($order , $num = 1 ) {
+    function changeOrderQuantity($order , $num ) {
         if( $order instanceof Order ) {
             $orderObj = $order;
         } else if ( is_int($order) ) {
@@ -111,4 +111,16 @@ class CartService {
         $order = $this->ordersRepository->createOrder($productObj,$quantity);
         $this->addOrder($order);
     }
+
+    function getOrdersCount() {
+        $count = 0;
+        /** @var Order $order */
+        foreach($this->cart->getOrders() as $order){
+            $count += $order->getQuantity();
+        }
+
+        return $count;
+    }
+
+
 }

@@ -2,6 +2,7 @@
 
 namespace App\repositories;
 use App\exceptions\EntityNotExistException;
+use Doctrine\ORM\AbstractQuery;
 use Doctrine\ORM\EntityRepository;
 
 class ColorsRepository extends EntityRepository {
@@ -17,5 +18,12 @@ class ColorsRepository extends EntityRepository {
             array_push($colors_,$color);
         }
         return $colors_;
+    }
+
+    function getAll() {
+        $qb = $this->createQueryBuilder("co");
+        $qb->select("co");
+
+        return $qb->getQuery()->getResult(AbstractQuery::HYDRATE_ARRAY);
     }
 }

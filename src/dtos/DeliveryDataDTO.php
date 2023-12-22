@@ -11,7 +11,7 @@ class DeliveryDataDTO {
         public string $location,
         public DeliveryRegion $region,
         public int $postalCode,
-        public $mapsLocation     = [],
+        public $mapsLocation     = '',
         public bool $defaultData = false,
         public bool $delivery    = false
     ){}
