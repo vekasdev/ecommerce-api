@@ -27,10 +27,11 @@ class CartsRepository extends EntityRepository{
 
     function getDetails(Cart $cart) {
         $qb = $this->createQueryBuilder("ca");
-        $qb->select("ca,o,pr,im")
+        $qb->select("ca,o,pr,im,co")
             ->leftJoin("ca.orders","o")
             ->leftJoin("o.product","pr")
             ->leftJoin("pr.images","im")
+            ->leftJoin("o.color","co")
             ->where($qb->expr()->eq("ca.id",":id"));
         $qb->setParameter("id",$cart->getId());
 

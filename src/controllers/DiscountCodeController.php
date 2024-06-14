@@ -9,6 +9,7 @@ use App\exceptions\OrderingProcessException;
 use App\exceptions\ProcessedRequestException;
 use App\exceptions\RequestValidatorException;
 use App\exceptions\UploadedFileException;
+use App\model\EntityServiceProvider;
 use App\model\ImagesService;
 use App\model\OrderGroupService;
 use App\model\OrderGroupServiceFactory;
@@ -44,7 +45,8 @@ class DiscountCodeController {
     function __construct(
         private EntityManager $em,
         private ValidatorFactory $validatorFactory,
-        private ImagesService $imagesService 
+        private ImagesService $imagesService ,
+        private EntityServiceProvider $entityServiceProvider
     
     ) {
         $this->discountCodeRepository = $em->getRepository(DiscountCode::class);
@@ -60,14 +62,11 @@ class DiscountCodeController {
 
             $this->validatorFactory->make(CreateDiscountCodeValidator::class)->validate($data);
 
-            if ( ! $uploadedImage = $req->getUploadedFiles()["image"] ) {
-                return $res->withJson([
-                    "message" => "you must upload image",
-                ],400);  
+            if ( $uploadedImage = $req->getUploadedFiles()["image"] ) {
+                $uploadedImage = $this->imagesService->save($uploadedImage);
+                $uploadedImage = $this->imagesRepository->addImage($uploadedImage);
             }
 
-            $uploadedImage = $this->imagesService->save($uploadedImage);
-            $uploadedImage = $this->imagesRepository->addImage($uploadedImage);
 
             $dcode = $this->discountCodeRepository->createDiscountCode(
                 (string) $data["code"],
@@ -109,7 +108,7 @@ class DiscountCodeController {
             $discountCode = $this->discountCodeRepository->find($id);
 
 
-            $oldImage = $discountCode->getImage() !== null ? $discountCode->getImage()->getFullFileName() : null;
+            $oldImage = $discountCode->getImage() ? $discountCode->getImage()->getFullFileName() : null;
 
             if (  $uploadedImage = $req->getUploadedFiles()["image"] ) {
                 $uploadedImage = $this->handleImage($uploadedImage);
@@ -161,22 +160,41 @@ class DiscountCodeController {
         return $res->withJson($codes);
     }
 
+    function getSingleDiscountCode(ServerRequest $req, Response $res,$args) {
+        $id = $args["id"];
+        $arr = $this->discountCodeRepository->getDiscountCodeById((int) $id);
+        if($arr == null) {
+            $res = $res->withJson(
+                ["message"=>"discout code with id $id not exist"
+        ],400);
+        } else {
+            $res = $res->withJson($arr);
+        }
+
+        return $res;
+    }
+
+    function deleteDiscountCode(ServerRequest $req, Response $res,$args) {
+        $id = (int) $args["id"];
+        try {
+            $discountService = $this->entityServiceProvider->provide(DiscountCode::class,$id);
+            $discountService->remove();
+            $res = $res->withJson(["discount with id : $id deleted successfuly"]);
+        } catch (EntityNotExistException $e) {
+            $res = $res->withJson(["message"=> $e->getMessage()],400);
+        }
+        return $res;
+    }
+
+    // function test(ServerRequest $req, Response $res,$args) {
+    //     $this->entityServiceProvider->provide(DiscountCode::class,13)->remove();
+    //     return $res;
+    // }
+
     private function handleImage(UploadedFile $image) {
         $uploadedImage = $this->imagesService->save($image);
         $uploadedImage = $this->imagesRepository->addImage($uploadedImage);
         return $uploadedImage;
     }
-
-    private function getDeleteOldImagesClosure() {
-        $imagesService = $this->imagesService;
-        return $deletingOldImages = function (DiscountCode $discountCode) use ($imagesService) {
-            if($image = $discountCode->getImage()) {
-                if($imagesService->deleteImage($image->getFullFileName())) {
-                    return true;
-                }
-            }
-        };
-    }
-    
 
 }

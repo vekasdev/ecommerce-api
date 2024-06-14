@@ -37,7 +37,7 @@ class Product {
 
 
     #[ORM\Column(type:Types::DECIMAL,precision:3,scale:2)]
-    private float $discountPrecentage = 1.0;
+    private float $discountPrecentage = 0;
 
     #[ORM\ManyToMany(targetEntity:User::class,inversedBy:"favorites",cascade:["persist"])]
     private $interestedUsers;

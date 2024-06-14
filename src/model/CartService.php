@@ -4,13 +4,17 @@ namespace App\model;
 
 use App\exceptions\EntityNotExistException;
 use App\repositories\CartsRepository;
+use App\repositories\ColorsRepository;
 use App\repositories\OrdersRepository;
 use App\repositories\ProductsRepository;
 use Cart;
+use Color;
 use Doctrine\ORM\EntityManager;
 use Order;
 use Product;
 use Symfony\Component\Routing\Exception\InvalidParameterException;
+
+use function PHPUnit\Framework\isNull;
 
 class CartService {
 
@@ -20,6 +24,8 @@ class CartService {
 
     private ProductsRepository $productsRepository;
 
+    private ColorsRepository $colorRepository;
+
     function __construct(
         private Cart $cart,
         private EntityManager $entityManager
@@ -27,6 +33,7 @@ class CartService {
         $this->cartsRepository = $entityManager->getRepository(Cart::class);
         $this->ordersRepository = $entityManager->getRepository(Order::class);
         $this->productsRepository  = $entityManager->getRepository(Product::class);
+        $this->colorRepository = $entityManager->getRepository(Color::class);
     }
 
     function getDetails() {
@@ -51,24 +58,21 @@ class CartService {
             throw new InvalidParameterException();
         }
 
-
-        // if order exist increase its quantity 
         foreach ( $this->cart->getOrders() as $cartOrder ) {
             if ( $orderObj->getProduct() == $cartOrder->getProduct() ) {
-                // increase quantity by 1
-                $cartOrder->changeQuantity($cartOrder->getQuantity() + $orderObj->getQuantity());
-
-                // persist changes
-                $this->entityManager->persist($cartOrder);
-                $this->entityManager->remove($orderObj);
-                $this->entityManager->flush();
-
-                return ;
+                // if the product and color are the same increase quantity by 
+                $newColor = $orderObj->getColor();
+                $oldColor = $cartOrder->getColor();
+                if ( $newColor === $oldColor ) {
+                    $cartOrder->changeQuantity($cartOrder->getQuantity() + $orderObj->getQuantity());
+                    $this->entityManager->persist($cartOrder);
+                    $this->entityManager->remove($orderObj);
+                    $this->entityManager->flush();
+                    return;
+                }
             }
         }
-
-
-        // if not exist add to cart
+        // if not exist ( product ) and same color add to cart
         $this->cart = $this->cartsRepository->addOrderToCart($this->cart,$orderObj);
     }
 
@@ -97,7 +101,7 @@ class CartService {
         return;
     }
 
-    function createOrder($product,$quantity) {
+    function createOrder($product,$quantity,int | null $color) {
         if( $product instanceof Product ) {
             $productObj = $product;
         } else if ( is_int($product) ) {
@@ -107,8 +111,18 @@ class CartService {
             throw new InvalidParameterException();
         }
 
-
-        $order = $this->ordersRepository->createOrder($productObj,$quantity);
+        if( $color instanceof Color ) {
+            $colorObj = $color;
+        } else if ( is_int($color) ) {
+            if( !$colorObj = $this->colorRepository->find( $color ) )
+                throw new EntityNotExistException(" color with id `$color` not exist ");
+        } elseif ( isNull($color) ) {
+            $colorObj = null;
+        } else {
+            throw new InvalidParameterException();
+        }
+        
+        $order = $this->ordersRepository->createOrder($productObj,$quantity,$colorObj);
         $this->addOrder($order);
     }
 

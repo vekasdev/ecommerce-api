@@ -18,7 +18,8 @@
         "symfony/google-mailer": "^6.3",
         "elastic-email/web-api-client": "^1.0",
         "slim/psr7": "^1.6.1",
-        "vlucas/valitron": "^1.4"
+        "vlucas/valitron": "^1.4",
+        "gregwar/captcha": "^1.2"
     },
     "autoload": {
         "psr-4": {

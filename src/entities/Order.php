@@ -6,6 +6,8 @@ use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 use Doctrine\ORM\Mapping\Column;
 use Doctrine\ORM\Mapping\Entity;
+use Doctrine\ORM\Mapping\ManyToOne;
+use Doctrine\ORM\Mapping\PreRemove;
 
 #[Entity(repositoryClass:OrdersRepository::class)]
 #[ORM\Table(name:"orders")]
@@ -29,9 +31,12 @@ class Order {
 
     #[Column(type:Types::INTEGER)]
     private int $quantity;
+
+    #[ORM\ManyToOne(targetEntity:Color::class,inversedBy:"orders",cascade:["persist"])]
+    private $color;
     
 
-    #[ORM\ManyToOne(targetEntity:OrderGroup::class,inversedBy:"orders",cascade:["persist","remove"])]
+    #[ORM\ManyToOne(targetEntity:OrderGroup::class,inversedBy:"orders",cascade:["persist"])]
     #[ORM\JoinColumn(name:"orderGroup_id",referencedColumnName:"id",nullable:true)]
     private OrderGroup | null $orderGroup;
 
@@ -49,6 +54,20 @@ class Order {
     }
     function getTotal() : float{
         return $this->getProduct()->getPrice()  * $this->getQuantity(); 
+    }
+
+    #[ORM\PreRemove]
+    function preRemove() {
+        $this->color->getOrders()->removeElement($this);
+        $this->color = null;
+    }
+
+    function setColor(Color $color) {
+        $this->color = $color;
+    }
+
+    function getColor() {
+        return $this->color;
     }
 
     /**

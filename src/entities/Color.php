@@ -4,6 +4,7 @@ use App\repositories\ColorsRepository;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\ORM\Mapping as ORM;
 use Doctrine\DBAL\Types\Types;
+use Doctrine\ORM\Mapping\OneToMany;
 
 #[ORM\Entity(repositoryClass:ColorsRepository::class)]
 #[ORM\Table(name:"colors")]
@@ -13,18 +14,38 @@ class Color {
     #[ORM\GeneratedValue]
     private int $id;
 
-    #[ORM\Column(type: Types::STRING)]
+    #[ORM\Column(type: Types::STRING,unique:true)]
     private string $colorName;
 
     #[ORM\Column(type: Types::STRING)]
     private string $colorHexCode;
 
-    #[ORM\ManyToMany(targetEntity:Product::class,inversedBy:"colors",cascade:["persist","remove"])]
+    #[ORM\ManyToMany(targetEntity:Product::class,inversedBy:"colors",cascade:["persist"])]
+    /** @var Product[] */
     private $products;
 
 
+    #[ORM\OneToMany(targetEntity:Order::class ,mappedBy:"color",cascade:["persist"])]
+    private $orders;
+
     function __construct(){
         $this->products = new ArrayCollection;
+        $this->orders = new ArrayCollection;
+    }
+
+    function addOrder(Order $order) {
+        $order->setColor($this);
+        $this->orders->add($order);
+    }
+
+    function &getOrders() {
+        return $this->orders;
+    }
+    #[ORM\PreRemove]
+    function preRemove() {
+        foreach($this->products as $product) {
+            $product->getColors()->removeElement($this);
+        }
     }
 
     function removeProduct(Product $product){
@@ -38,6 +59,7 @@ class Color {
         return $this->products;
     }
 
+    
     /**
      * Get the value of colorHexCode
      */

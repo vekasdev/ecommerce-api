@@ -302,6 +302,7 @@ class ProductController {
         return $images;
     }
     
+    
 
     private  function createProductDataFiltering(array $data){
         $filters = new ProductDataFiltering();
@@ -314,10 +315,12 @@ class ProductController {
         if(isset($data["limit"])) $filters->limit = (int) $data["limit"] ; else $filters->limit = 50;
         if(isset($data["minPrice"])) $filters->minPrice = $data["minPrice"];
         if(isset($data["maxPrice"])) $filters->maxPrice = $data["maxPrice"];
-        if(isset($data["productDiscount"])) $filters->productDiscount = $data["productDiscount"];
+        if(isset($data["min-product-discount"])) $filters->minProductDiscount = (float) $data["min-product-discount"];
         if(isset($data["fromIndex"])) $filters->fromIndex = $data["fromIndex"] ; else $filters->fromIndex = 0;
-        if(isset($data["minStockQuantity"])) $filters->minStockQuantity = $data["minStockQuantity"];
+        if(isset($data["minStockQuantity"])) $filters->minStockQuantity = $data["minStockQuantity"] ;
+            else $filters->minStockQuantity = 1 ;
         if(isset($data["main-category"])) $filters->mainCategory = $data["main-category"];
+        
         
         return $filters;
     }

@@ -139,9 +139,9 @@ class ProductsRepository extends EntityRepository {
                 ->setParameter("mainCategoryId",$filtering->mainCategory);
         }
 
-        if(isset($filtering->productDiscount)) {
-            $qb->andWhere($qb->expr()->lt("p.discountPrecentage",":discountPrecentage"))
-            ->setParameter("discountPrecentage",$filtering->productDiscount);
+        if(isset($filtering->minProductDiscount)) {
+            $qb->andWhere("p.discountPrecentage >= :discountPrecentage")
+            ->setParameter("discountPrecentage",$filtering->minProductDiscount);
         }
 
         if(isset($filtering->color)) {

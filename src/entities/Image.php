@@ -45,6 +45,9 @@ class Image {
         if($this->promotionAd !== null) {
             $this->promotionAd->getImages()->removeElement($this);
         }
+        if($this->product !== null) {
+            $this->product->getImages()->removeElement($this);
+        }
     }
 
 
@@ -111,6 +114,24 @@ class Image {
     public function setExtension(string $extension): self
     {
         $this->extension = $extension;
+
+        return $this;
+    }
+
+    /**
+     * Get the value of id
+     */
+    public function getId() : int
+    {
+        return $this->id;
+    }
+
+    /**
+     * Set the value of id
+     */
+    public function setId($id): self
+    {
+        $this->id = $id;
 
         return $this;
     }

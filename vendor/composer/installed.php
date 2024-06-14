@@ -5,7 +5,7 @@
         'type' => 'library',
         'install_path' => __DIR__ . '/../../',
         'aliases' => array(),
-        'reference' => '97d2eebe7f93b4e401a1e292bff4ce6135de3641',
+        'reference' => 'dd8ea1183a9c9fa7627a5a2833ca727a7925c814',
         'name' => '__root__',
         'dev' => true,
     ),
@@ -16,7 +16,7 @@
             'type' => 'library',
             'install_path' => __DIR__ . '/../../',
             'aliases' => array(),
-            'reference' => '97d2eebe7f93b4e401a1e292bff4ce6135de3641',
+            'reference' => 'dd8ea1183a9c9fa7627a5a2833ca727a7925c814',
             'dev_requirement' => false,
         ),
         'doctrine/cache' => array(
@@ -179,6 +179,15 @@
             'install_path' => __DIR__ . '/../firebase/php-jwt',
             'aliases' => array(),
             'reference' => 'f03270e63eaccf3019ef0f32849c497385774e11',
+            'dev_requirement' => false,
+        ),
+        'gregwar/captcha' => array(
+            'pretty_version' => 'v1.2.1',
+            'version' => '1.2.1.0',
+            'type' => 'library',
+            'install_path' => __DIR__ . '/../gregwar/captcha',
+            'aliases' => array(),
+            'reference' => '229d3cdfe33d6f1349e0aec94a26e9205a6db08e',
             'dev_requirement' => false,
         ),
         'guzzlehttp/psr7' => array(

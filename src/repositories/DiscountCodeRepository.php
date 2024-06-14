@@ -10,7 +10,7 @@ use Doctrine\ORM\EntityRepository;
 use Image;
 
 class DiscountCodeRepository extends EntityRepository {
-    function getDiscountCode($code){
+    function getDiscountCode($code) : DiscountCode | null{
         $qb = $this->createQueryBuilder("d");
         $qb->where($qb->expr()->eq("d.code","?1"))
         ->setParameter(1, $code);
@@ -18,13 +18,38 @@ class DiscountCodeRepository extends EntityRepository {
         return $qb->getQuery()->getOneOrNullResult();
     }
 
-    function createDiscountCode(string $code, int $precentage, bool $valid,bool $promoted,Image $image ){ 
+    function deleteDiscountCode(int $id){
+        if(!$dc = $this->find($id)) {
+            throw new EntityNotExistException("discount-code with id $id not exist");
+        }
+        $this->getEntityManager()->remove($dc);
+        $this->getEntityManager()->flush();
+        return true;
+    }
+
+    function getDiscountCodeById($id) {
+        $qb = $this->createQueryBuilder("dc");
+
+        $qb->select("dc,i")
+        ->leftJoin("dc.image","i")
+        ->where("dc.id = :id")
+        ->setParameter("id",$id);
+
+        $result =  $qb->getQuery()->getResult(AbstractQuery::HYDRATE_ARRAY);
+        if(count($result) > 0 ) {
+            return $result[0];
+        }
+        return null;
+    }
+
+    function createDiscountCode(string $code, int $precentage, bool $valid,bool $promoted,?Image $image ){ 
         $dcode = new DiscountCode();
         $dcode->setCode($code);
         $dcode->setPrecentage($precentage*pow(10, -2));
         $dcode->setValid($valid);
         $dcode->setPromoted($promoted);
-        $dcode->setImage($image);
+        if($image) 
+            $dcode->setImage($image);
         $this->getEntityManager()->persist($dcode);
         $this->getEntityManager()->flush();
         return $dcode;
@@ -54,5 +79,7 @@ class DiscountCodeRepository extends EntityRepository {
 
         return $qb->getQuery()->getResult(AbstractQuery::HYDRATE_ARRAY);
     }
+
+
     
 }

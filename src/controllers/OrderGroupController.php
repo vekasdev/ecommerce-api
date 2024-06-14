@@ -46,6 +46,7 @@ class OrderGroupController {
     function getOrderGroups(ServerRequest $req, Response $res,$args ) {
         try {
             $params = $req->getQueryParams();
+            $params["withInformation"] = true;
 
             $this->validatorFactory->make(GetOrderGroupsValidator::class)
             ->validate($params);
@@ -111,7 +112,8 @@ class OrderGroupController {
             case "1" : 
                 $results = $this->orderGroupRepo->getOrderGroups([
                     "id" => $userService->getUser()->getId(),
-                    "status"  => $status
+                    "status"  => $status,
+                    "withInformation" => false
                 ]);
                 break;
             case "2": 
@@ -123,12 +125,14 @@ class OrderGroupController {
             case "3" :
                 $results = $this->orderGroupRepo->getOrderGroups([
                     "id" => $userService->getUser()->getId(),
-                    "status"  => $status
+                    "status"  => $status,
+                    "withInformation" => false
                 ]);
                 break;
             default : 
                 $results = $this->orderGroupRepo->getOrderGroups([
-                    "id" => $userService->getUser()->getId() 
+                    "id" => $userService->getUser()->getId(),
+                    "withInformation" => false
                 ]);
                 break ;
         }

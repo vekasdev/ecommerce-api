@@ -18,7 +18,7 @@ class ProductDataFiltering {
         public null | string $minStockQuantity = null,
         public null | int $category         = null,
         public null | int $mainCategory     = null,
-        public float | null $productDiscount= null,
+        public float | null $minProductDiscount= null,
         public null | int $color            = null,
         public int $limit                   = 10,
         public int $fromIndex               = 1,

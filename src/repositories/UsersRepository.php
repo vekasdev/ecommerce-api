@@ -11,7 +11,7 @@ use User;
 use ValidationCode;
 
 class UsersRepository extends EntityRepository {
-    function addUser(UserData $userData){
+    function addUser(UserData $userData,bool $valid){
         $user = new User();
         $user->setAddress($userData->address)
         ->setEmail($userData->email)
@@ -19,7 +19,7 @@ class UsersRepository extends EntityRepository {
         ->setFirstName($userData->firstName)
         ->setPassword($userData->password)
         ->setPhoneNumber($userData->phoneNumber)
-        ->setValid(false);
+        ->setValid($valid);
 
         $this->getEntityManager()->persist($user);
         $this->getEntityManager()->flush();

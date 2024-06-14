@@ -16,10 +16,18 @@ class OrderGroupsRepository extends EntityRepository {
 
         $qb = $this->createQueryBuilder("og");
 
-        $qb->select("og,u,c,o,p,dd,dc,dg")
-        ->leftJoin("og.user","u")
+        if(isset($filter["withInformation"])) {
+            // all data
+            $qb->select("og,u,c,o,p,dd,dc,dg,co");
+        } else {
+            // all data except the user information
+            $qb->select("og,c,o,p,dd,dc,dg,co");
+        }
+
+        $qb->leftJoin("og.user","u")
         ->leftJoin("og.cart","c")
         ->leftJoin("c.orders","o")
+        ->leftJoin("o.color","co")
         ->leftJoin("o.product","p")
         ->leftJoin("og.deliveryData","dd")
         ->leftJoin("og.discountCode","dc")
@@ -36,7 +44,7 @@ class OrderGroupsRepository extends EntityRepository {
 
         $results = $qb->getQuery()->getResult(AbstractQuery::HYDRATE_ARRAY);
 
-        /** @var OrderGroup $result */
+        // /** @var OrderGroup $result */
         foreach($results as &$result) {
             $result["total"] = $this->find($result["id"])->getTotal();
         }

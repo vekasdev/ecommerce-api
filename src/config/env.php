@@ -11,6 +11,7 @@ return [
     "gmail-smtp-config" => [
         "email" => "hassanalsadi6@gmail.com",
         "password" => "uucu lhey vxda jtwi"
-    ]
+    ],
+    "captcha-code-expire" => (new DateTime("+5 minutes"))->getTimestamp() // five minutes
 ];
 

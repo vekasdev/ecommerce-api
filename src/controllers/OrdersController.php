@@ -46,9 +46,12 @@ class OrdersController {
         $userService = $req->getAttribute("user");
 
         $cartService = $userService->getCartService();
-
+        $product =  (int) $args["product-id"];
+        $quantity = (int) $args["quantity"];
+        $color = isset($args["color"]) ?  (int) $args["color"] : null;
+        
         try {
-            $cartService->createOrder((int)$args["product-id"],(int) $args["quantity"]);
+            $cartService->createOrder($product,$quantity,$color);
         }catch(EntityNotExistException $e) {
             return $res->withJson(
                 ["message" => $e->getMessage()],
@@ -56,7 +59,7 @@ class OrdersController {
         }
 
         return $res->withJson(
-            ["message" => "order created"],200
+            ["message" => "order created with"],200
         );
 
     }
@@ -180,14 +183,16 @@ class OrdersController {
             $res = $res->withJson(
                 [
                     "status"=>"failed",
-                    "message" => $e->getMessage()
+                    "message" => $e->getMessage(),
+                    "code" => $e->getCode()
                 ],
             400);
         } catch (ElementAlreadyExistsException $e) {
             $res = $res->withJson(
                 [
                     "status"=>"failed",
-                    "message" => $e->getMessage()
+                    "message" => $e->getMessage(),
+                    "code" => $e->getCode()
                 ],
             400);
         }

@@ -18,23 +18,25 @@ class GetProductsValidator extends AbstractValidator {
                 "minStockQuantity",
                 "category",
                 "main-category",
-                "productDiscount",
                 "color",
                 "limit",
                 "fromIndex",
-                "pageCount"
+                "pageCount",
+                "min-product-discount"
             ],
             "min" => [
-                ["pageCount",0]
+                ["pageCount",0],
+                ['min-product-discount',0]
             ],
             "max"=>[
-                ["pageCount",1]
+                ["pageCount",1],
+                ['min-product-discount',1]
             ],
             "regex" => [
                 ["name","/^[a-zA-Z0-9\s\p{Arabic}]+$/u"],
                 ["description","/^[a-zA-Z\x{0600}-\x{06FF}]+$/u"],
             ],
-            "numeric"=> ["main-category","pageCount","minPrice","maxPrice","minStockQuantity","category","productDiscount","color","limit","fromIndex"],
+            "numeric"=> ["main-category","pageCount","minPrice","maxPrice","minStockQuantity","category","min-product-discount","color","limit","fromIndex"],
         ]);
 
         $this->checkValidation($v);

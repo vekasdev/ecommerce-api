@@ -74,11 +74,11 @@ class OrderGroupService {
 
     function addDiscountCode(string $code) {
         if(!is_null($this->orderGroup->getDiscountCode())) {
-            throw new ElementAlreadyExistsException("discount code exist , you cannot add another one !");
+            throw new ElementAlreadyExistsException("discount code is exist, you can't add another one!",321);
         }
         $dcode = $this->discountCodeRepository->getDiscountCode($code);
-        if(!$dcode) {
-            throw new EntityNotExistException("code : ". $code . " not valid");
+        if(!$dcode || !$dcode->isValid()) {
+            throw new EntityNotExistException("code : ". $code . " not valid",322);
         }
         $this->orderGroup->setDiscountCode($dcode);
         $this->update();

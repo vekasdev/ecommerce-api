@@ -107,6 +107,7 @@ class ComposerStaticInit524cc1c9dfc49b9ec30b82356c1a1239
         'G' => 
         array (
             'GuzzleHttp\\Psr7\\' => 16,
+            'Gregwar\\' => 8,
         ),
         'F' => 
         array (
@@ -352,6 +353,10 @@ class ComposerStaticInit524cc1c9dfc49b9ec30b82356c1a1239
         'GuzzleHttp\\Psr7\\' => 
         array (
             0 => __DIR__ . '/..' . '/guzzlehttp/psr7/src',
+        ),
+        'Gregwar\\' => 
+        array (
+            0 => __DIR__ . '/..' . '/gregwar/captcha/src/Gregwar',
         ),
         'Firebase\\JWT\\' => 
         array (

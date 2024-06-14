@@ -8,6 +8,8 @@ use App\model\CartService;
 use App\model\CartServiceFactory;
 use App\model\EmailServiceFactory;
 use App\model\EmailService;
+use App\model\EntityServiceProvider;
+use App\model\EntityServiceProviderFactory;
 use App\model\ImagesService;
 use App\model\OrderGroupServiceFactory;
 use App\model\ProductServiceProvider;
@@ -21,6 +23,8 @@ use App\repositories\UsersRepository;
 use Doctrine\ORM\EntityManager;
 use Doctrine\ORM\Mapping\Entity;
 use Firebase\JWT\JWT;
+use Gregwar\Captcha\CaptchaBuilder;
+use Gregwar\Captcha\PhraseBuilder;
 use GuzzleHttp\Psr7\Request;
 use Psr\Container\ContainerInterface;
 use Slim\Http\Factory\DecoratedResponseFactory;
@@ -108,6 +112,18 @@ return [
                 => new ProductServiceProvider($container->get(EntityManager::class),$container->get(ImagesService::class)),
     
     PromotionAdServiceProvider::class => fn(ContainerInterface $ci)
-                => new PromotionAdServiceProvider($ci->get(EntityManager::class),$ci->get(ImagesService::class))
+                => new PromotionAdServiceProvider($ci->get(EntityManager::class),$ci->get(ImagesService::class)),
+
+    EntityServiceProvider::class => function(ContainerInterface $container) {
+        $factory = new EntityServiceProviderFactory($container);
+        return $factory->registerFromArray(require __DIR__."/entity_service_provider_definitions.php");
+    },
+
+    CaptchaBuilder::class => function() {
+        $phrase = new PhraseBuilder(4);
+        return (new CaptchaBuilder(null,$phrase))->build();
+    }
+    
 
 ];
+
